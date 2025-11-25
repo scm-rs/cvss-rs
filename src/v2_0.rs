@@ -1,6 +1,7 @@
 //! Represents the CVSS v2.0 specification.
 
 use serde::{Deserialize, Serialize};
+use strum::{Display, EnumString};
 
 use crate::Severity as UnifiedSeverity;
 
@@ -51,39 +52,95 @@ pub enum Severity {
 }
 
 /// Represents the access vector metric.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum AccessVector {
+    #[strum(serialize = "N")]
     Network,
+    #[strum(serialize = "A")]
     AdjacentNetwork,
+    #[strum(serialize = "L")]
     Local,
 }
 
+impl AccessVector {
+    /// Returns the numeric score for this metric per CVSS v2.0 specification.
+    pub fn score(&self) -> f64 {
+        match self {
+            AccessVector::Network => 1.0,
+            AccessVector::AdjacentNetwork => 0.646,
+            AccessVector::Local => 0.395,
+        }
+    }
+}
+
 /// Represents the access complexity metric.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum AccessComplexity {
+    #[strum(serialize = "H")]
     High,
+    #[strum(serialize = "M")]
     Medium,
+    #[strum(serialize = "L")]
     Low,
 }
 
+impl AccessComplexity {
+    /// Returns the numeric score for this metric per CVSS v2.0 specification.
+    pub fn score(&self) -> f64 {
+        match self {
+            AccessComplexity::High => 0.35,
+            AccessComplexity::Medium => 0.61,
+            AccessComplexity::Low => 0.71,
+        }
+    }
+}
+
 /// Represents the authentication metric.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum Authentication {
+    #[strum(serialize = "M")]
     Multiple,
+    #[strum(serialize = "S")]
     Single,
+    #[strum(serialize = "N")]
     None,
 }
 
+impl Authentication {
+    /// Returns the numeric score for this metric per CVSS v2.0 specification.
+    pub fn score(&self) -> f64 {
+        match self {
+            Authentication::Multiple => 0.45,
+            Authentication::Single => 0.56,
+            Authentication::None => 0.704,
+        }
+    }
+}
+
 /// Represents the impact metrics (confidentiality, integrity, availability).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum Impact {
+    #[strum(serialize = "N")]
     None,
+    #[strum(serialize = "P")]
     Partial,
+    #[strum(serialize = "C")]
     Complete,
+}
+
+impl Impact {
+    /// Returns the numeric score for this metric per CVSS v2.0 specification.
+    pub fn score(&self) -> f64 {
+        match self {
+            Impact::None => 0.0,
+            Impact::Partial => 0.275,
+            Impact::Complete => 0.660,
+        }
+    }
 }
 
 impl CvssV2 {

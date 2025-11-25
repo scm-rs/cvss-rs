@@ -1,6 +1,7 @@
 //! Represents the CVSS v4.0 specification.
 
 use serde::{Deserialize, Serialize};
+use strum::{Display, EnumString};
 
 use crate::Severity as UnifiedSeverity;
 
@@ -129,132 +130,178 @@ pub enum Severity {
 }
 
 /// Attack Vector (AV) / Modified Attack Vector (MAV).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum AttackVector {
+    #[strum(serialize = "N")]
     Network,
+    #[strum(serialize = "A")]
     Adjacent,
+    #[strum(serialize = "L")]
     Local,
+    #[strum(serialize = "P")]
     Physical,
 }
 
 /// Attack Complexity (AC) / Modified Attack Complexity (MAC).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum AttackComplexity {
+    #[strum(serialize = "L")]
     Low,
+    #[strum(serialize = "H")]
     High,
 }
 
 /// Attack Requirements (AT) / Modified Attack Requirements (MAT).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum AttackRequirements {
+    #[strum(serialize = "N")]
     None,
+    #[strum(serialize = "P")]
     Present,
 }
 
 /// Privileges Required (PR) / Modified Privileges Required (MPR).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum PrivilegesRequired {
+    #[strum(serialize = "N")]
     None,
+    #[strum(serialize = "L")]
     Low,
+    #[strum(serialize = "H")]
     High,
 }
 
 /// User Interaction (UI) / Modified User Interaction (MUI).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum UserInteraction {
+    #[strum(serialize = "N")]
     None,
+    #[strum(serialize = "P")]
     Passive,
+    #[strum(serialize = "A")]
     Active,
 }
 
 /// Impact metrics (VC, VI, VA, SC, SI, SA and their modified versions).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum Impact {
+    #[strum(serialize = "H")]
     High,
+    #[strum(serialize = "L")]
     Low,
+    #[strum(serialize = "N")]
     None,
 }
 
 /// Exploit Maturity (E).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ExploitMaturity {
+    #[strum(serialize = "A")]
     Attacked,
+    #[strum(serialize = "P")]
     ProofOfConcept,
+    #[strum(serialize = "U")]
     Unreported,
+    #[strum(serialize = "X")]
     NotDefined,
 }
 
 /// Requirement metrics (CR, IR, AR).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum Requirement {
+    #[strum(serialize = "H")]
     High,
+    #[strum(serialize = "M")]
     Medium,
+    #[strum(serialize = "L")]
     Low,
 }
 
 /// Safety (S).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Safety {
+    #[strum(serialize = "N")]
     Negligible,
+    #[strum(serialize = "P")]
     Present,
+    #[strum(serialize = "X")]
     NotDefined,
 }
 
 /// Automatable (AU).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Automatable {
+    #[strum(serialize = "N")]
     No,
+    #[strum(serialize = "Y")]
     Yes,
+    #[strum(serialize = "X")]
     NotDefined,
 }
 
 /// Recovery (R).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum Recovery {
+    #[strum(serialize = "A")]
     Automatic,
+    #[strum(serialize = "U")]
     User,
+    #[strum(serialize = "I")]
     Irrecoverable,
+    #[strum(serialize = "X")]
     NotDefined,
 }
 
 /// Value Density (V).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ValueDensity {
+    #[strum(serialize = "D")]
     Diffuse,
+    #[strum(serialize = "C")]
     Concentrated,
+    #[strum(serialize = "X")]
     NotDefined,
 }
 
 /// Vulnerability Response Effort (RE).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum VulnerabilityResponseEffort {
+    #[strum(serialize = "L")]
     Low,
+    #[strum(serialize = "M")]
     Moderate,
+    #[strum(serialize = "H")]
     High,
+    #[strum(serialize = "X")]
     NotDefined,
 }
 
 /// Provider Urgency (U).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ProviderUrgency {
+    #[strum(serialize = "Clear")]
     Clear,
+    #[strum(serialize = "Green")]
     Green,
+    #[strum(serialize = "Amber")]
     Amber,
+    #[strum(serialize = "Red")]
     Red,
+    #[strum(serialize = "X")]
     NotDefined,
 }
 
