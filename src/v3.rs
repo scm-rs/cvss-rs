@@ -1,9 +1,11 @@
 //! Represents the CVSS v3.0 and v3.1 specifications.
 
 use serde::{Deserialize, Serialize};
+use std::fmt;
+use std::str::FromStr;
 use strum::{Display, EnumString};
 
-use crate::Severity as UnifiedSeverity;
+use crate::{ParseError, Severity as UnifiedSeverity};
 
 /// Represents a CVSS v3.0 or v3.1 score object.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -353,5 +355,356 @@ impl CvssV3 {
             Severity::High => UnifiedSeverity::High,
             Severity::Critical => UnifiedSeverity::Critical,
         })
+    }
+}
+
+impl FromStr for CvssV3 {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let mut components = s.split('/');
+
+        // Parse version prefix (e.g., "CVSS:3.1")
+        let version_component = components.next().ok_or_else(|| ParseError::InvalidPrefix {
+            found: String::new(),
+        })?;
+
+        let mut version_parts = version_component.split(':');
+        let prefix = version_parts
+            .next()
+            .ok_or_else(|| ParseError::InvalidPrefix {
+                found: version_component.to_string(),
+            })?;
+
+        if !prefix.eq_ignore_ascii_case("CVSS") {
+            return Err(ParseError::InvalidPrefix {
+                found: prefix.to_string(),
+            });
+        }
+
+        let version = version_parts
+            .next()
+            .ok_or_else(|| ParseError::InvalidVersion {
+                version: version_component.to_string(),
+            })?;
+
+        if version != "3.0" && version != "3.1" {
+            return Err(ParseError::InvalidVersion {
+                version: version.to_string(),
+            });
+        }
+
+        // Initialize a CvssV3 with empty fields
+        let mut cvss = CvssV3 {
+            vector_string: s.to_string(),
+            base_score: 0.0,
+            base_severity: Severity::None,
+            attack_vector: None,
+            attack_complexity: None,
+            privileges_required: None,
+            user_interaction: None,
+            scope: None,
+            confidentiality_impact: None,
+            integrity_impact: None,
+            availability_impact: None,
+            temporal_score: None,
+            temporal_severity: None,
+            exploit_code_maturity: None,
+            remediation_level: None,
+            report_confidence: None,
+            environmental_score: None,
+            environmental_severity: None,
+            confidentiality_requirement: None,
+            integrity_requirement: None,
+            availability_requirement: None,
+            modified_attack_vector: None,
+            modified_attack_complexity: None,
+            modified_privileges_required: None,
+            modified_user_interaction: None,
+            modified_scope: None,
+            modified_confidentiality_impact: None,
+            modified_integrity_impact: None,
+            modified_availability_impact: None,
+        };
+
+        // Parse metrics
+        for component in components {
+            if component.is_empty() {
+                continue;
+            }
+
+            let mut parts = component.split(':');
+            let key = parts
+                .next()
+                .ok_or_else(|| ParseError::InvalidComponent {
+                    component: component.to_string(),
+                })?
+                .to_ascii_uppercase();
+            let value = parts
+                .next()
+                .ok_or_else(|| ParseError::InvalidComponent {
+                    component: component.to_string(),
+                })?
+                .to_ascii_uppercase();
+
+            // Check for extra colons
+            if parts.next().is_some() {
+                return Err(ParseError::InvalidComponent {
+                    component: component.to_string(),
+                });
+            }
+
+            match key.as_str() {
+                // Base metrics
+                "AV" => {
+                    cvss.attack_vector =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "AC" => {
+                    cvss.attack_complexity =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "PR" => {
+                    cvss.privileges_required =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "UI" => {
+                    cvss.user_interaction =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "S" => {
+                    cvss.scope =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "C" => {
+                    cvss.confidentiality_impact =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "I" => {
+                    cvss.integrity_impact =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "A" => {
+                    cvss.availability_impact =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                // Temporal metrics
+                "E" => {
+                    cvss.exploit_code_maturity =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "RL" => {
+                    cvss.remediation_level =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "RC" => {
+                    cvss.report_confidence =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                // Environmental metrics
+                "CR" => {
+                    cvss.confidentiality_requirement =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "IR" => {
+                    cvss.integrity_requirement =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "AR" => {
+                    cvss.availability_requirement =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "MAV" => {
+                    cvss.modified_attack_vector =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "MAC" => {
+                    cvss.modified_attack_complexity =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "MPR" => {
+                    cvss.modified_privileges_required =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "MUI" => {
+                    cvss.modified_user_interaction =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "MS" => {
+                    cvss.modified_scope =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "MC" => {
+                    cvss.modified_confidentiality_impact =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "MI" => {
+                    cvss.modified_integrity_impact =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "MA" => {
+                    cvss.modified_availability_impact =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                _ => {
+                    return Err(ParseError::UnknownMetric { metric: key });
+                }
+            }
+        }
+
+        Ok(cvss)
+    }
+}
+
+impl fmt::Display for CvssV3 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // Determine version from the stored vector_string if possible, default to 3.1
+        let version = if self.vector_string.starts_with("CVSS:3.0") {
+            "3.0"
+        } else {
+            "3.1"
+        };
+
+        write!(f, "CVSS:{}", version)?;
+
+        // Base metrics
+        if let Some(av) = &self.attack_vector {
+            write!(f, "/AV:{}", av)?;
+        }
+        if let Some(ac) = &self.attack_complexity {
+            write!(f, "/AC:{}", ac)?;
+        }
+        if let Some(pr) = &self.privileges_required {
+            write!(f, "/PR:{}", pr)?;
+        }
+        if let Some(ui) = &self.user_interaction {
+            write!(f, "/UI:{}", ui)?;
+        }
+        if let Some(s) = &self.scope {
+            write!(f, "/S:{}", s)?;
+        }
+        if let Some(c) = &self.confidentiality_impact {
+            write!(f, "/C:{}", c)?;
+        }
+        if let Some(i) = &self.integrity_impact {
+            write!(f, "/I:{}", i)?;
+        }
+        if let Some(a) = &self.availability_impact {
+            write!(f, "/A:{}", a)?;
+        }
+
+        // Temporal metrics
+        if let Some(e) = &self.exploit_code_maturity {
+            write!(f, "/E:{}", e)?;
+        }
+        if let Some(rl) = &self.remediation_level {
+            write!(f, "/RL:{}", rl)?;
+        }
+        if let Some(rc) = &self.report_confidence {
+            write!(f, "/RC:{}", rc)?;
+        }
+
+        // Environmental metrics
+        if let Some(cr) = &self.confidentiality_requirement {
+            write!(f, "/CR:{}", cr)?;
+        }
+        if let Some(ir) = &self.integrity_requirement {
+            write!(f, "/IR:{}", ir)?;
+        }
+        if let Some(ar) = &self.availability_requirement {
+            write!(f, "/AR:{}", ar)?;
+        }
+        if let Some(mav) = &self.modified_attack_vector {
+            write!(f, "/MAV:{}", mav)?;
+        }
+        if let Some(mac) = &self.modified_attack_complexity {
+            write!(f, "/MAC:{}", mac)?;
+        }
+        if let Some(mpr) = &self.modified_privileges_required {
+            write!(f, "/MPR:{}", mpr)?;
+        }
+        if let Some(mui) = &self.modified_user_interaction {
+            write!(f, "/MUI:{}", mui)?;
+        }
+        if let Some(ms) = &self.modified_scope {
+            write!(f, "/MS:{}", ms)?;
+        }
+        if let Some(mc) = &self.modified_confidentiality_impact {
+            write!(f, "/MC:{}", mc)?;
+        }
+        if let Some(mi) = &self.modified_integrity_impact {
+            write!(f, "/MI:{}", mi)?;
+        }
+        if let Some(ma) = &self.modified_availability_impact {
+            write!(f, "/MA:{}", ma)?;
+        }
+
+        Ok(())
     }
 }

@@ -42,7 +42,7 @@
 //! ```
 
 use serde::Deserialize;
-use std::fmt::{Display, Formatter};
+use std::fmt::{self, Display, Formatter};
 use strum::{Display, EnumDiscriminants, EnumString};
 
 pub mod v2_0;
@@ -120,3 +120,60 @@ pub enum Severity {
     High,
     Critical,
 }
+
+/// Errors that can occur when parsing CVSS vector strings.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ParseError {
+    /// Vector string doesn't start with "CVSS" or expected prefix
+    InvalidPrefix { found: String },
+    /// Unsupported or invalid CVSS version
+    InvalidVersion { version: String },
+    /// Component is malformed (not in key:value format)
+    InvalidComponent { component: String },
+    /// Metric abbreviation not recognized
+    UnknownMetric { metric: String },
+    /// Metric value parsing failed
+    InvalidMetricValue { metric: String, value: String },
+    /// Required base metric is missing
+    MissingRequiredMetric { metric: String },
+    /// Same metric appears multiple times
+    DuplicateMetric { metric: String },
+}
+
+impl Display for ParseError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            ParseError::InvalidPrefix { found } => {
+                write!(
+                    f,
+                    "invalid vector prefix: expected 'CVSS', found '{}'",
+                    found
+                )
+            }
+            ParseError::InvalidVersion { version } => {
+                write!(f, "invalid or unsupported CVSS version: '{}'", version)
+            }
+            ParseError::InvalidComponent { component } => {
+                write!(
+                    f,
+                    "invalid component format: '{}' (expected 'KEY:VALUE')",
+                    component
+                )
+            }
+            ParseError::UnknownMetric { metric } => {
+                write!(f, "unknown metric abbreviation: '{}'", metric)
+            }
+            ParseError::InvalidMetricValue { metric, value } => {
+                write!(f, "invalid value '{}' for metric '{}'", value, metric)
+            }
+            ParseError::MissingRequiredMetric { metric } => {
+                write!(f, "missing required metric: '{}'", metric)
+            }
+            ParseError::DuplicateMetric { metric } => {
+                write!(f, "duplicate metric: '{}'", metric)
+            }
+        }
+    }
+}
+
+impl std::error::Error for ParseError {}
