@@ -160,6 +160,31 @@ pub enum PrivilegesRequired {
     NotDefined,
 }
 
+impl PrivilegesRequired {
+    /// Returns the numeric score for this metric, accounting for scope.
+    /// Per CVSS v3.x specification, the PR score depends on whether scope is changed.
+    pub fn score(&self, scope_changed: bool) -> f64 {
+        match self {
+            PrivilegesRequired::None => 0.85,
+            PrivilegesRequired::Low => {
+                if scope_changed {
+                    0.68
+                } else {
+                    0.62
+                }
+            }
+            PrivilegesRequired::High => {
+                if scope_changed {
+                    0.50
+                } else {
+                    0.27
+                }
+            }
+            PrivilegesRequired::NotDefined => 0.85, // Defaults to worst case (None)
+        }
+    }
+}
+
 /// Represents the user interaction metric.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -355,6 +380,169 @@ impl CvssV3 {
             Severity::High => UnifiedSeverity::High,
             Severity::Critical => UnifiedSeverity::Critical,
         })
+    }
+
+    /// Calculates the base score from the base metrics.
+    /// Returns None if required base metrics are missing.
+    pub fn calculated_base_score(&self) -> Option<f64> {
+        // All base metrics are required
+        let av = self.attack_vector.as_ref()?;
+        let ac = self.attack_complexity.as_ref()?;
+        let pr = self.privileges_required.as_ref()?;
+        let ui = self.user_interaction.as_ref()?;
+        let scope = self.scope.as_ref()?;
+        let c = self.confidentiality_impact.as_ref()?;
+        let i = self.integrity_impact.as_ref()?;
+        let a = self.availability_impact.as_ref()?;
+
+        let scope_changed = scope.is_changed();
+
+        // Calculate exploitability sub-score
+        let exploitability = 8.22 * av.score() * ac.score() * pr.score(scope_changed) * ui.score();
+
+        // Calculate impact sub-score
+        let impact_sub = 1.0 - ((1.0 - c.score()) * (1.0 - i.score()) * (1.0 - a.score()));
+
+        // Calculate ISS (Impact Sub Score)
+        let iss = if scope_changed {
+            7.52 * (impact_sub - 0.029) - 3.25 * (impact_sub - 0.02).powf(15.0)
+        } else {
+            6.42 * impact_sub
+        };
+
+        // Calculate base score
+        let score = if iss <= 0.0 {
+            0.0
+        } else if scope_changed {
+            Self::roundup(f64::min(1.08 * (exploitability + iss), 10.0))
+        } else {
+            Self::roundup(f64::min(exploitability + iss, 10.0))
+        };
+
+        Some(score)
+    }
+
+    /// Calculates the temporal score from base and temporal metrics.
+    /// Returns None if required metrics are missing.
+    pub fn calculated_temporal_score(&self) -> Option<f64> {
+        let base_score = self.calculated_base_score()?;
+
+        // Temporal metrics default to 1.0 (NotDefined) if not present
+        let e = self
+            .exploit_code_maturity
+            .as_ref()
+            .map(|m| m.score())
+            .unwrap_or(1.0);
+        let rl = self
+            .remediation_level
+            .as_ref()
+            .map(|m| m.score())
+            .unwrap_or(1.0);
+        let rc = self
+            .report_confidence
+            .as_ref()
+            .map(|m| m.score())
+            .unwrap_or(1.0);
+
+        let score = Self::roundup(base_score * e * rl * rc);
+        Some(score)
+    }
+
+    /// Calculates the environmental score from base, temporal, and environmental metrics.
+    /// Returns None if required base metrics are missing.
+    pub fn calculated_environmental_score(&self) -> Option<f64> {
+        // Get base metrics (required)
+        let av = self.attack_vector.as_ref()?;
+        let ac = self.attack_complexity.as_ref()?;
+        let pr = self.privileges_required.as_ref()?;
+        let ui = self.user_interaction.as_ref()?;
+        let scope = self.scope.as_ref()?;
+        let c = self.confidentiality_impact.as_ref()?;
+        let i = self.integrity_impact.as_ref()?;
+        let a = self.availability_impact.as_ref()?;
+
+        // Modified metrics default to base metrics if not defined
+        let mav = self.modified_attack_vector.as_ref().unwrap_or(av);
+        let mac = self.modified_attack_complexity.as_ref().unwrap_or(ac);
+        let mpr = self.modified_privileges_required.as_ref().unwrap_or(pr);
+        let mui = self.modified_user_interaction.as_ref().unwrap_or(ui);
+        let ms = self.modified_scope.as_ref().unwrap_or(scope);
+        let mc = self.modified_confidentiality_impact.as_ref().unwrap_or(c);
+        let mi = self.modified_integrity_impact.as_ref().unwrap_or(i);
+        let ma = self.modified_availability_impact.as_ref().unwrap_or(a);
+
+        // Security requirements default to 1.0 (Medium/NotDefined)
+        let cr = self
+            .confidentiality_requirement
+            .as_ref()
+            .map(|r| r.score())
+            .unwrap_or(1.0);
+        let ir = self
+            .integrity_requirement
+            .as_ref()
+            .map(|r| r.score())
+            .unwrap_or(1.0);
+        let ar = self
+            .availability_requirement
+            .as_ref()
+            .map(|r| r.score())
+            .unwrap_or(1.0);
+
+        let scope_changed = ms.is_changed();
+
+        // Calculate modified exploitability
+        let m_exploitability =
+            8.22 * mav.score() * mac.score() * mpr.score(scope_changed) * mui.score();
+
+        // Calculate modified impact
+        let m_impact_sub = f64::min(
+            1.0 - ((1.0 - cr * mc.score()) * (1.0 - ir * mi.score()) * (1.0 - ar * ma.score())),
+            0.915,
+        );
+
+        // Calculate modified ISS
+        let m_iss = if scope_changed {
+            7.52 * (m_impact_sub - 0.029) - 3.25 * (m_impact_sub - 0.02).powf(15.0)
+        } else {
+            6.42 * m_impact_sub
+        };
+
+        // Calculate environmental score
+        let score = if m_iss <= 0.0 {
+            0.0
+        } else {
+            // Temporal metrics for environmental calculation
+            let e = self
+                .exploit_code_maturity
+                .as_ref()
+                .map(|m| m.score())
+                .unwrap_or(1.0);
+            let rl = self
+                .remediation_level
+                .as_ref()
+                .map(|m| m.score())
+                .unwrap_or(1.0);
+            let rc = self
+                .report_confidence
+                .as_ref()
+                .map(|m| m.score())
+                .unwrap_or(1.0);
+
+            if scope_changed {
+                Self::roundup(
+                    Self::roundup(f64::min(1.08 * (m_exploitability + m_iss), 10.0)) * e * rl * rc,
+                )
+            } else {
+                Self::roundup(Self::roundup(f64::min(m_exploitability + m_iss, 10.0)) * e * rl * rc)
+            }
+        };
+
+        Some(score)
+    }
+
+    /// Rounds up to 1 decimal place as per CVSS v3 specification.
+    fn roundup(value: f64) -> f64 {
+        (value * 10.0).ceil() / 10.0
     }
 }
 

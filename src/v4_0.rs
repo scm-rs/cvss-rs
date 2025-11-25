@@ -325,6 +325,19 @@ impl CvssV4 {
             Severity::Critical => UnifiedSeverity::Critical,
         })
     }
+
+    /// Calculates the base score from the base metrics.
+    /// Returns None if required base metrics are missing.
+    ///
+    /// TODO: CVSS v4.0 score calculation is not yet implemented.
+    /// CVSS v4.0 uses a complex lookup-table based algorithm (MacroVector)
+    /// and nomenclature system (CVSS-B, CVSS-BT, CVSS-BE, CVSS-BTE).
+    /// This requires implementing the full specification from:
+    /// https://www.first.org/cvss/v4.0/specification-document
+    pub fn calculated_base_score(&self) -> Option<f64> {
+        // TODO: Implement CVSS v4.0 base score calculation
+        None
+    }
 }
 
 impl FromStr for CvssV4 {

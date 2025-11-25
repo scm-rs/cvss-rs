@@ -161,6 +161,63 @@ impl CvssV2 {
             Severity::High => UnifiedSeverity::High,
         })
     }
+
+    /// Calculates the base score from the base metrics.
+    /// Returns None if required base metrics are missing.
+    pub fn calculated_base_score(&self) -> Option<f64> {
+        // All base metrics are required
+        let av = self.access_vector.as_ref()?;
+        let ac = self.access_complexity.as_ref()?;
+        let au = self.authentication.as_ref()?;
+        let c = self.confidentiality_impact.as_ref()?;
+        let i = self.integrity_impact.as_ref()?;
+        let a = self.availability_impact.as_ref()?;
+
+        // Calculate impact
+        let impact = 10.41 * (1.0 - (1.0 - c.score()) * (1.0 - i.score()) * (1.0 - a.score()));
+
+        // Calculate exploitability
+        let exploitability = 20.0 * av.score() * ac.score() * au.score();
+
+        // f(impact) = 0 if impact = 0, else 1.176
+        let f_impact = if impact == 0.0 { 0.0 } else { 1.176 };
+
+        // Calculate base score
+        let score = ((0.6 * impact) + (0.4 * exploitability) - 1.5) * f_impact;
+
+        // Round to 1 decimal place
+        Some((score * 10.0).round() / 10.0)
+    }
+
+    /// Calculates the temporal score from base and temporal metrics.
+    /// Returns None if required base metrics are missing.
+    ///
+    /// Note: CVSS v2.0 temporal metrics are not commonly used in this library's schema,
+    /// but the calculation is provided for completeness.
+    pub fn calculated_temporal_score(&self) -> Option<f64> {
+        let base_score = self.calculated_base_score()?;
+
+        // CVSS v2.0 temporal metrics are not defined in the current schema
+        // If they were, they would be: Exploitability, RemediationLevel, ReportConfidence
+        // For now, we just return the base score since temporal metrics aren't in the struct
+
+        Some(base_score)
+    }
+
+    /// Calculates the environmental score from base, temporal, and environmental metrics.
+    /// Returns None if required base metrics are missing.
+    ///
+    /// Note: CVSS v2.0 environmental metrics are not commonly used in this library's schema,
+    /// but the calculation is provided for completeness.
+    pub fn calculated_environmental_score(&self) -> Option<f64> {
+        let temporal_score = self.calculated_temporal_score()?;
+
+        // CVSS v2.0 environmental metrics are not defined in the current schema
+        // If they were, they would include: CollateralDamagePotential, TargetDistribution, etc.
+        // For now, we just return the temporal score since environmental metrics aren't in the struct
+
+        Some(temporal_score)
+    }
 }
 
 impl FromStr for CvssV2 {
