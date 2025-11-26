@@ -1,5 +1,11 @@
 //! Represents the CVSS v4.0 specification.
 
+mod lookup;
+mod score;
+mod scoring;
+
+pub use score::Nomenclature;
+
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::str::FromStr;
@@ -145,6 +151,17 @@ pub enum AttackVector {
     Physical,
 }
 
+impl AttackVector {
+    pub fn level(&self) -> f64 {
+        match self {
+            AttackVector::Network => 0.0,
+            AttackVector::Adjacent => 1.0,
+            AttackVector::Local => 2.0,
+            AttackVector::Physical => 3.0,
+        }
+    }
+}
+
 /// Attack Complexity (AC) / Modified Attack Complexity (MAC).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
@@ -155,6 +172,15 @@ pub enum AttackComplexity {
     High,
 }
 
+impl AttackComplexity {
+    pub fn level(&self) -> f64 {
+        match self {
+            AttackComplexity::Low => 0.0,
+            AttackComplexity::High => 1.0,
+        }
+    }
+}
+
 /// Attack Requirements (AT) / Modified Attack Requirements (MAT).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
@@ -163,6 +189,15 @@ pub enum AttackRequirements {
     None,
     #[strum(serialize = "P")]
     Present,
+}
+
+impl AttackRequirements {
+    pub fn level(&self) -> f64 {
+        match self {
+            AttackRequirements::None => 0.0,
+            AttackRequirements::Present => 1.0,
+        }
+    }
 }
 
 /// Privileges Required (PR) / Modified Privileges Required (MPR).
@@ -177,6 +212,16 @@ pub enum PrivilegesRequired {
     High,
 }
 
+impl PrivilegesRequired {
+    pub fn level(&self) -> f64 {
+        match self {
+            PrivilegesRequired::None => 0.0,
+            PrivilegesRequired::Low => 1.0,
+            PrivilegesRequired::High => 2.0,
+        }
+    }
+}
+
 /// User Interaction (UI) / Modified User Interaction (MUI).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
@@ -189,6 +234,16 @@ pub enum UserInteraction {
     Active,
 }
 
+impl UserInteraction {
+    pub fn level(&self) -> f64 {
+        match self {
+            UserInteraction::None => 0.0,
+            UserInteraction::Passive => 1.0,
+            UserInteraction::Active => 2.0,
+        }
+    }
+}
+
 /// Impact metrics (VC, VI, VA, SC, SI, SA and their modified versions).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
@@ -199,6 +254,16 @@ pub enum Impact {
     Low,
     #[strum(serialize = "N")]
     None,
+}
+
+impl Impact {
+    pub fn level(&self) -> f64 {
+        match self {
+            Impact::High => 0.0,
+            Impact::Low => 1.0,
+            Impact::None => 2.0,
+        }
+    }
 }
 
 /// Exploit Maturity (E).
@@ -215,6 +280,17 @@ pub enum ExploitMaturity {
     NotDefined,
 }
 
+impl ExploitMaturity {
+    pub fn level(&self) -> f64 {
+        match self {
+            ExploitMaturity::Attacked => 0.0,
+            ExploitMaturity::ProofOfConcept => 1.0,
+            ExploitMaturity::Unreported => 2.0,
+            ExploitMaturity::NotDefined => 2.0, // NotDefined defaults to Unreported
+        }
+    }
+}
+
 /// Requirement metrics (CR, IR, AR).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
@@ -225,6 +301,16 @@ pub enum Requirement {
     Medium,
     #[strum(serialize = "L")]
     Low,
+}
+
+impl Requirement {
+    pub fn level(&self) -> f64 {
+        match self {
+            Requirement::High => 0.0,
+            Requirement::Medium => 1.0,
+            Requirement::Low => 2.0,
+        }
+    }
 }
 
 /// Safety (S).
