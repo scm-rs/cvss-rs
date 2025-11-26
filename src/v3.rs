@@ -5,6 +5,7 @@ use std::fmt;
 use std::str::FromStr;
 use strum::{Display, EnumString};
 
+use crate::version::VersionV3;
 use crate::{ParseError, Severity as UnifiedSeverity};
 
 /// Represents a CVSS v3.0 or v3.1 score object.
@@ -13,6 +14,9 @@ use crate::{ParseError, Severity as UnifiedSeverity};
 pub struct CvssV3 {
     /// The CVSS vector string.
     pub vector_string: String,
+    /// The specific CVSS v3 version (3.0 or 3.1).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<VersionV3>,
     /// The base score, a value between 0.0 and 10.0.
     pub base_score: f64,
     /// The qualitative severity rating for the base score.
@@ -404,6 +408,7 @@ impl CvssV3 {
         let impact_sub = 1.0 - ((1.0 - c.score()) * (1.0 - i.score()) * (1.0 - a.score()));
 
         // Calculate ISS (Impact Sub Score)
+        // Base score formula is the same for v3.0 and v3.1
         let iss = if scope_changed {
             7.52 * (impact_sub - 0.029) - 3.25 * (impact_sub - 0.02).powf(15.0)
         } else {
@@ -501,8 +506,18 @@ impl CvssV3 {
         );
 
         // Calculate modified ISS
+        // CVSS v3.1 uses a different formula than v3.0
         let m_iss = if scope_changed {
-            7.52 * (m_impact_sub - 0.029) - 3.25 * (m_impact_sub - 0.02).powf(15.0)
+            match self.version {
+                Some(VersionV3::V3_1) => {
+                    // v3.1: 7.52 × (MISS - 0.029) - 3.25 × (MISS × 0.9731 - 0.02)^13
+                    7.52 * (m_impact_sub - 0.029) - 3.25 * (m_impact_sub * 0.9731 - 0.02).powf(13.0)
+                }
+                _ => {
+                    // v3.0: 7.52 × (MISS - 0.029) - 3.25 × (MISS - 0.02)^15
+                    7.52 * (m_impact_sub - 0.029) - 3.25 * (m_impact_sub - 0.02).powf(15.0)
+                }
+            }
         } else {
             6.42 * m_impact_sub
         };
@@ -541,8 +556,15 @@ impl CvssV3 {
     }
 
     /// Rounds up to 1 decimal place as per CVSS v3 specification.
+    ///
+    /// Per the CVSS v3 spec, to avoid floating point precision issues,
+    /// the input is first multiplied by 100,000 and rounded to the nearest integer.
+    /// This ensures consistent rounding across different implementations.
     fn roundup(value: f64) -> f64 {
-        (value * 10.0).ceil() / 10.0
+        // Handle floating point precision by normalizing to integer first
+        let int_input = (value * 100000.0).round() as i64;
+        let normalized = int_input as f64 / 100000.0;
+        (normalized * 10.0).ceil() / 10.0
     }
 }
 
@@ -570,21 +592,26 @@ impl FromStr for CvssV3 {
             });
         }
 
-        let version = version_parts
+        let version_str = version_parts
             .next()
             .ok_or_else(|| ParseError::InvalidVersion {
                 version: version_component.to_string(),
             })?;
 
-        if version != "3.0" && version != "3.1" {
-            return Err(ParseError::InvalidVersion {
-                version: version.to_string(),
-            });
-        }
+        let parsed_version = match version_str {
+            "3.0" => VersionV3::V3_0,
+            "3.1" => VersionV3::V3_1,
+            _ => {
+                return Err(ParseError::InvalidVersion {
+                    version: version_str.to_string(),
+                })
+            }
+        };
 
         // Initialize a CvssV3 with empty fields
         let mut cvss = CvssV3 {
             vector_string: s.to_string(),
+            version: Some(parsed_version),
             base_score: 0.0,
             base_severity: Severity::None,
             attack_vector: None,

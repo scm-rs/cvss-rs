@@ -51,13 +51,13 @@ pub struct CvssV4 {
     pub vuln_availability_impact: Option<Impact>,
     /// Subsequent System Confidentiality Impact (SC).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sub_confidentiality_impact: Option<Impact>,
+    pub sub_confidentiality_impact: Option<SubsequentImpact>,
     /// Subsequent System Integrity Impact (SI).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sub_integrity_impact: Option<Impact>,
+    pub sub_integrity_impact: Option<SubsequentImpact>,
     /// Subsequent System Availability Impact (SA).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sub_availability_impact: Option<Impact>,
+    pub sub_availability_impact: Option<SubsequentImpact>,
 
     // --- Threat Metrics ---
     /// Exploit Maturity (E).
@@ -100,13 +100,13 @@ pub struct CvssV4 {
     pub modified_vuln_availability_impact: Option<Impact>,
     /// Modified Subsequent System Confidentiality Impact (MSC).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub modified_sub_confidentiality_impact: Option<Impact>,
+    pub modified_sub_confidentiality_impact: Option<SubsequentImpact>,
     /// Modified Subsequent System Integrity Impact (MSI).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub modified_sub_integrity_impact: Option<Impact>,
+    pub modified_sub_integrity_impact: Option<SubsequentImpact>,
     /// Modified Subsequent System Availability Impact (MSA).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub modified_sub_availability_impact: Option<Impact>,
+    pub modified_sub_availability_impact: Option<SubsequentImpact>,
 
     // --- Supplemental Metrics ---
     #[serde(rename = "Safety")]
@@ -138,7 +138,7 @@ pub enum Severity {
 }
 
 /// Attack Vector (AV) / Modified Attack Vector (MAV).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum AttackVector {
     #[strum(serialize = "N")]
@@ -155,15 +155,15 @@ impl AttackVector {
     pub fn level(&self) -> f64 {
         match self {
             AttackVector::Network => 0.0,
-            AttackVector::Adjacent => 1.0,
-            AttackVector::Local => 2.0,
-            AttackVector::Physical => 3.0,
+            AttackVector::Adjacent => 0.1,
+            AttackVector::Local => 0.2,
+            AttackVector::Physical => 0.3,
         }
     }
 }
 
 /// Attack Complexity (AC) / Modified Attack Complexity (MAC).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum AttackComplexity {
     #[strum(serialize = "L")]
@@ -176,13 +176,13 @@ impl AttackComplexity {
     pub fn level(&self) -> f64 {
         match self {
             AttackComplexity::Low => 0.0,
-            AttackComplexity::High => 1.0,
+            AttackComplexity::High => 0.1,
         }
     }
 }
 
 /// Attack Requirements (AT) / Modified Attack Requirements (MAT).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum AttackRequirements {
     #[strum(serialize = "N")]
@@ -195,13 +195,13 @@ impl AttackRequirements {
     pub fn level(&self) -> f64 {
         match self {
             AttackRequirements::None => 0.0,
-            AttackRequirements::Present => 1.0,
+            AttackRequirements::Present => 0.1,
         }
     }
 }
 
 /// Privileges Required (PR) / Modified Privileges Required (MPR).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum PrivilegesRequired {
     #[strum(serialize = "N")]
@@ -216,14 +216,14 @@ impl PrivilegesRequired {
     pub fn level(&self) -> f64 {
         match self {
             PrivilegesRequired::None => 0.0,
-            PrivilegesRequired::Low => 1.0,
-            PrivilegesRequired::High => 2.0,
+            PrivilegesRequired::Low => 0.1,
+            PrivilegesRequired::High => 0.2,
         }
     }
 }
 
 /// User Interaction (UI) / Modified User Interaction (MUI).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum UserInteraction {
     #[strum(serialize = "N")]
@@ -238,14 +238,14 @@ impl UserInteraction {
     pub fn level(&self) -> f64 {
         match self {
             UserInteraction::None => 0.0,
-            UserInteraction::Passive => 1.0,
-            UserInteraction::Active => 2.0,
+            UserInteraction::Passive => 0.1,
+            UserInteraction::Active => 0.2,
         }
     }
 }
 
-/// Impact metrics (VC, VI, VA, SC, SI, SA and their modified versions).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+/// Impact metrics for vulnerable system (VC, VI, VA and their modified versions).
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum Impact {
     #[strum(serialize = "H")]
@@ -260,14 +260,40 @@ impl Impact {
     pub fn level(&self) -> f64 {
         match self {
             Impact::High => 0.0,
-            Impact::Low => 1.0,
-            Impact::None => 2.0,
+            Impact::Low => 0.1,
+            Impact::None => 0.2,
+        }
+    }
+}
+
+/// Impact metrics for subsequent system (SC, SI, SA and their modified versions).
+/// Includes Safety variant which is unique to subsequent system impacts.
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum SubsequentImpact {
+    #[strum(serialize = "S")]
+    Safety,
+    #[strum(serialize = "H")]
+    High,
+    #[strum(serialize = "L")]
+    Low,
+    #[strum(serialize = "N")]
+    None,
+}
+
+impl SubsequentImpact {
+    pub fn level(&self) -> f64 {
+        match self {
+            SubsequentImpact::Safety => 0.0,
+            SubsequentImpact::High => 0.1,
+            SubsequentImpact::Low => 0.2,
+            SubsequentImpact::None => 0.3,
         }
     }
 }
 
 /// Exploit Maturity (E).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ExploitMaturity {
     #[strum(serialize = "A")]
@@ -284,15 +310,15 @@ impl ExploitMaturity {
     pub fn level(&self) -> f64 {
         match self {
             ExploitMaturity::Attacked => 0.0,
-            ExploitMaturity::ProofOfConcept => 1.0,
-            ExploitMaturity::Unreported => 2.0,
-            ExploitMaturity::NotDefined => 2.0, // NotDefined defaults to Unreported
+            ExploitMaturity::ProofOfConcept => 0.1,
+            ExploitMaturity::Unreported => 0.2,
+            ExploitMaturity::NotDefined => 0.2, // NotDefined defaults to Unreported
         }
     }
 }
 
 /// Requirement metrics (CR, IR, AR).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum Requirement {
     #[strum(serialize = "H")]
@@ -307,8 +333,8 @@ impl Requirement {
     pub fn level(&self) -> f64 {
         match self {
             Requirement::High => 0.0,
-            Requirement::Medium => 1.0,
-            Requirement::Low => 2.0,
+            Requirement::Medium => 0.1,
+            Requirement::Low => 0.2,
         }
     }
 }
@@ -415,14 +441,46 @@ impl CvssV4 {
     /// Calculates the base score from the base metrics.
     /// Returns None if required base metrics are missing.
     ///
-    /// TODO: CVSS v4.0 score calculation is not yet implemented.
-    /// CVSS v4.0 uses a complex lookup-table based algorithm (MacroVector)
-    /// and nomenclature system (CVSS-B, CVSS-BT, CVSS-BE, CVSS-BTE).
-    /// This requires implementing the full specification from:
+    /// This uses the CVSS v4.0 MacroVector-based scoring algorithm as specified in:
     /// https://www.first.org/cvss/v4.0/specification-document
+    ///
+    /// The score is rounded to one decimal place as required by the specification.
+    ///
+    /// Note: In CVSS v4.0, the "base score" excludes threat metrics (like E) for
+    /// backwards compatibility with the CVSS v3.x schema, even though CVSS v4.0
+    /// conceptually has a unified score. Use `calculated_full_score()` if you need
+    /// the full score including threat metrics.
     pub fn calculated_base_score(&self) -> Option<f64> {
-        // TODO: Implement CVSS v4.0 base score calculation
-        None
+        let score = scoring::calculate_base_score(self)?;
+        Some(score::round_v4(score))
+    }
+
+    /// Calculates the full CVSS v4.0 score including threat metrics (E).
+    /// Returns None if required base metrics are missing.
+    ///
+    /// This includes the Exploit Maturity (E) metric in the score calculation.
+    /// For base score only (excluding E), use `calculated_base_score()`.
+    pub fn calculated_full_score(&self) -> Option<f64> {
+        let score = scoring::calculate_score(self)?;
+        Some(score::round_v4(score))
+    }
+
+    /// Calculates the CVSS v4.0 score and returns it along with the appropriate nomenclature.
+    ///
+    /// Returns a tuple of (score, nomenclature) where:
+    /// - score: The calculated CVSS v4.0 score (0.0-10.0), rounded to one decimal place
+    /// - nomenclature: The appropriate nomenclature based on which metrics are present:
+    ///   - CVSS-B: Base metrics only
+    ///   - CVSS-BT: Base + Threat metrics
+    ///   - CVSS-BE: Base + Environmental metrics
+    ///   - CVSS-BTE: Base + Threat + Environmental metrics
+    ///
+    /// Returns None if required base metrics are missing.
+    pub fn calculated_score(&self) -> Option<(f64, Nomenclature)> {
+        let score = scoring::calculate_score(self)?;
+        let rounded_score = score::round_v4(score);
+        let nomenclature = Nomenclature::from(self);
+        Some((rounded_score, nomenclature))
     }
 }
 

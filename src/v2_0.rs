@@ -42,6 +42,30 @@ pub struct CvssV2 {
     /// The availability impact metric.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub availability_impact: Option<Impact>,
+    /// The exploitability metric (temporal).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub exploitability: Option<Exploitability>,
+    /// The remediation level metric (temporal).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub remediation_level: Option<RemediationLevel>,
+    /// The report confidence metric (temporal).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub report_confidence: Option<ReportConfidence>,
+    /// The collateral damage potential metric (environmental).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub collateral_damage_potential: Option<CollateralDamagePotential>,
+    /// The target distribution metric (environmental).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_distribution: Option<TargetDistribution>,
+    /// The confidentiality requirement metric (environmental).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub confidentiality_requirement: Option<SecurityRequirement>,
+    /// The integrity requirement metric (environmental).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub integrity_requirement: Option<SecurityRequirement>,
+    /// The availability requirement metric (environmental).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub availability_requirement: Option<SecurityRequirement>,
 }
 
 /// Represents the qualitative severity rating of a vulnerability.
@@ -143,6 +167,100 @@ impl Impact {
             Impact::Complete => 0.660,
         }
     }
+}
+
+/// Exploitability (E) - Temporal metric.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum Exploitability {
+    #[strum(serialize = "U")]
+    Unproven,
+    #[strum(serialize = "POC")]
+    ProofOfConcept,
+    #[strum(serialize = "F")]
+    Functional,
+    #[strum(serialize = "H")]
+    High,
+    #[strum(serialize = "ND")]
+    NotDefined,
+}
+
+/// Remediation Level (RL) - Temporal metric.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum RemediationLevel {
+    #[strum(serialize = "OF")]
+    OfficialFix,
+    #[strum(serialize = "TF")]
+    TemporaryFix,
+    #[strum(serialize = "W")]
+    Workaround,
+    #[strum(serialize = "U")]
+    Unavailable,
+    #[strum(serialize = "ND")]
+    NotDefined,
+}
+
+/// Report Confidence (RC) - Temporal metric.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ReportConfidence {
+    #[strum(serialize = "UC")]
+    Unconfirmed,
+    #[strum(serialize = "UR")]
+    Uncorroborated,
+    #[strum(serialize = "C")]
+    Confirmed,
+    #[strum(serialize = "ND")]
+    NotDefined,
+}
+
+/// Collateral Damage Potential (CDP) - Environmental metric.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum CollateralDamagePotential {
+    #[strum(serialize = "N")]
+    None,
+    #[strum(serialize = "L")]
+    Low,
+    #[strum(serialize = "LM")]
+    LowMedium,
+    #[strum(serialize = "MH")]
+    MediumHigh,
+    #[strum(serialize = "H")]
+    High,
+    #[strum(serialize = "ND")]
+    NotDefined,
+}
+
+/// Target Distribution (TD) - Environmental metric.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum TargetDistribution {
+    #[strum(serialize = "N")]
+    None,
+    #[strum(serialize = "L")]
+    Low,
+    #[strum(serialize = "M")]
+    Medium,
+    #[strum(serialize = "H")]
+    High,
+    #[strum(serialize = "ND")]
+    NotDefined,
+}
+
+/// Security Requirement (CR, IR, AR) - Environmental metric.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum SecurityRequirement {
+    #[strum(serialize = "L")]
+    Low,
+    #[strum(serialize = "M")]
+    Medium,
+    #[strum(serialize = "H")]
+    High,
+    #[strum(serialize = "ND")]
+    NotDefined,
 }
 
 impl CvssV2 {
@@ -247,6 +365,14 @@ impl FromStr for CvssV2 {
             confidentiality_impact: None,
             integrity_impact: None,
             availability_impact: None,
+            exploitability: None,
+            remediation_level: None,
+            report_confidence: None,
+            collateral_damage_potential: None,
+            target_distribution: None,
+            confidentiality_requirement: None,
+            integrity_requirement: None,
+            availability_requirement: None,
         };
 
         // Parse metrics
@@ -319,8 +445,67 @@ impl FromStr for CvssV2 {
                             value: value.clone(),
                         })?);
                 }
+                // Temporal metrics
+                "E" => {
+                    cvss.exploitability =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "RL" => {
+                    cvss.remediation_level =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "RC" => {
+                    cvss.report_confidence =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                // Environmental metrics
+                "CDP" => {
+                    cvss.collateral_damage_potential =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "TD" => {
+                    cvss.target_distribution =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "CR" => {
+                    cvss.confidentiality_requirement =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "IR" => {
+                    cvss.integrity_requirement =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
+                "AR" => {
+                    cvss.availability_requirement =
+                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                            metric: key.clone(),
+                            value: value.clone(),
+                        })?);
+                }
                 _ => {
-                    return Err(ParseError::UnknownMetric { metric: key });
+                    // Silently ignore unknown metrics to be lenient with parsing
+                    // This allows us to parse vectors even if they have metrics we don't recognize
                 }
             }
         }
