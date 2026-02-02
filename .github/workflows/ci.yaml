@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   common:
-    uses: ./.github/workflows/local-ci.yaml
+    uses: scm-rs/shared-workflows/.github/workflows/ci.yaml@main
 
   ci:
     runs-on: ubuntu-latest
