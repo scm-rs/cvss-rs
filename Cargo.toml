@@ -1,11 +1,13 @@
 [package]
 name = "cvss-rs"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 rust-version = "1.80"
 description = "A Rust library for representing and deserializing CVSS (Common Vulnerability Scoring System) data."
 license = "Apache-2.0"
-repository = "https://github.com/dejanb/cvss-rs"
+repository = "https://github.com/scm-rs/cvss-rs"
+homepage = "https://github.com/scm-rs/cvss-rs"
+documentation = "https://docs.rs/cvss-rs"
 keywords = ["cvss", "security", "vulnerability", "scoring"]
 categories = ["parser-implementations", "data-structures", "security"]
 readme = "README.md"
