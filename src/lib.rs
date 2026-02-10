@@ -45,6 +45,7 @@ use serde::Deserialize;
 use std::fmt::{self, Display, Formatter};
 use strum::{Display, EnumDiscriminants, EnumString};
 
+pub mod helper;
 pub mod v2_0;
 pub mod v3;
 pub mod v4_0;

@@ -1,4 +1,3 @@
-use cvss_rs::v2_0::CvssV2;
 use cvss_rs::v3::CvssV3;
 use std::str::FromStr;
 
@@ -67,52 +66,11 @@ fn test_v3_environmental_score_calculation() {
 }
 
 #[test]
-fn test_v2_score_calculation() {
-    // AV:N/AC:L/Au:N/C:C/I:C/A:C
-    // This is a high severity vulnerability
-    let vector = "AV:N/AC:L/Au:N/C:C/I:C/A:C";
-    let cvss = CvssV2::from_str(vector).expect("Failed to parse CVSS v2.0 vector");
-
-    let calculated_score = cvss
-        .calculated_base_score()
-        .expect("Failed to calculate score");
-    assert_eq!(calculated_score, 10.0);
-}
-
-#[test]
-fn test_v2_partial_impact_calculation() {
-    // AV:N/AC:L/Au:N/C:P/I:P/A:P
-    let vector = "AV:N/AC:L/Au:N/C:P/I:P/A:P";
-    let cvss = CvssV2::from_str(vector).expect("Failed to parse CVSS v2.0 vector");
-
-    let calculated_score = cvss
-        .calculated_base_score()
-        .expect("Failed to calculate score");
-    // Impact = 10.41 * (1 - (1-0.275)^3) = 6.443...
-    // Exploitability = 20 * 1.0 * 0.71 * 0.704 = 10.0
-    // Score = ((0.6*6.443) + (0.4*10.0) - 1.5) * 1.176 = 7.459... -> round to 7.5
-    assert_eq!(calculated_score, 7.5);
-}
-
-#[test]
 fn test_v3_zero_impact_score() {
     // CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N
     // No impact should result in score 0.0
     let vector = "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N";
     let cvss = CvssV3::from_str(vector).expect("Failed to parse CVSS v3.1 vector");
-
-    let calculated_score = cvss
-        .calculated_base_score()
-        .expect("Failed to calculate score");
-    assert_eq!(calculated_score, 0.0);
-}
-
-#[test]
-fn test_v2_zero_impact_score() {
-    // AV:N/AC:L/Au:N/C:N/I:N/A:N
-    // No impact should result in score 0.0
-    let vector = "AV:N/AC:L/Au:N/C:N/I:N/A:N";
-    let cvss = CvssV2::from_str(vector).expect("Failed to parse CVSS v2.0 vector");
 
     let calculated_score = cvss
         .calculated_base_score()

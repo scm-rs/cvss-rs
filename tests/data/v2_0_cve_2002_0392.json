@@ -1,0 +1,22 @@
+{
+  "accessComplexity": "LOW",
+  "accessVector": "NETWORK",
+  "authentication": "NONE",
+  "availabilityImpact": "COMPLETE",
+  "availabilityRequirement": "HIGH",
+  "baseScore": 7.8,
+  "collateralDamagePotential": "HIGH",
+  "confidentialityImpact": "NONE",
+  "confidentialityRequirement": "MEDIUM",
+  "exploitability": "FUNCTIONAL",
+  "integrityImpact": "NONE",
+  "integrityRequirement": "MEDIUM",
+  "remediationLevel": "OFFICIAL_FIX",
+  "reportConfidence": "CONFIRMED",
+  "severity": "High",
+  "targetDistribution": "HIGH",
+  "vectorString": "AV:N/AC:L/Au:N/C:N/I:N/A:C/E:F/RL:OF/RC:C/CDP:H/TD:H/CR:M/IR:M/AR:H",
+  "environmentalScore": 9.2,
+  "temporalScore": 6.4,
+  "version": "2.0"
+}
