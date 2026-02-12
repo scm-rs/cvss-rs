@@ -185,6 +185,19 @@ pub enum Exploitability {
     NotDefined,
 }
 
+impl Exploitability {
+    /// Returns the numeric score for this metric per CVSS v2.0 specification.
+    pub fn score(&self) -> f64 {
+        match self {
+            Exploitability::Unproven => 0.85,
+            Exploitability::ProofOfConcept => 0.9,
+            Exploitability::Functional => 0.95,
+            Exploitability::High => 1.0,
+            Exploitability::NotDefined => 1.0,
+        }
+    }
+}
+
 /// Remediation Level (RL) - Temporal metric.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -201,6 +214,19 @@ pub enum RemediationLevel {
     NotDefined,
 }
 
+impl RemediationLevel {
+    /// Returns the numeric score for this metric per CVSS v2.0 specification.
+    pub fn score(&self) -> f64 {
+        match self {
+            RemediationLevel::OfficialFix => 0.87,
+            RemediationLevel::TemporaryFix => 0.90,
+            RemediationLevel::Workaround => 0.95,
+            RemediationLevel::Unavailable => 1.0,
+            RemediationLevel::NotDefined => 1.0,
+        }
+    }
+}
+
 /// Report Confidence (RC) - Temporal metric.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -213,6 +239,18 @@ pub enum ReportConfidence {
     Confirmed,
     #[strum(serialize = "ND")]
     NotDefined,
+}
+
+impl ReportConfidence {
+    /// Returns the numeric score for this metric per CVSS v2.0 specification.
+    pub fn score(&self) -> f64 {
+        match self {
+            ReportConfidence::Unconfirmed => 0.90,
+            ReportConfidence::Uncorroborated => 0.95,
+            ReportConfidence::Confirmed => 1.0,
+            ReportConfidence::NotDefined => 1.0,
+        }
+    }
 }
 
 /// Collateral Damage Potential (CDP) - Environmental metric.
@@ -233,6 +271,20 @@ pub enum CollateralDamagePotential {
     NotDefined,
 }
 
+impl CollateralDamagePotential {
+    /// Returns the numeric score for this metric per CVSS v2.0 specification.
+    pub fn score(&self) -> f64 {
+        match self {
+            CollateralDamagePotential::None => 0.0,
+            CollateralDamagePotential::Low => 0.1,
+            CollateralDamagePotential::LowMedium => 0.3,
+            CollateralDamagePotential::MediumHigh => 0.4,
+            CollateralDamagePotential::High => 0.5,
+            CollateralDamagePotential::NotDefined => 0.0,
+        }
+    }
+}
+
 /// Target Distribution (TD) - Environmental metric.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -249,6 +301,19 @@ pub enum TargetDistribution {
     NotDefined,
 }
 
+impl TargetDistribution {
+    /// Returns the numeric score for this metric per CVSS v2.0 specification.
+    pub fn score(&self) -> f64 {
+        match self {
+            TargetDistribution::None => 0.0,
+            TargetDistribution::Low => 0.25,
+            TargetDistribution::Medium => 0.75,
+            TargetDistribution::High => 1.0,
+            TargetDistribution::NotDefined => 1.0,
+        }
+    }
+}
+
 /// Security Requirement (CR, IR, AR) - Environmental metric.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
@@ -261,6 +326,27 @@ pub enum SecurityRequirement {
     High,
     #[strum(serialize = "ND")]
     NotDefined,
+}
+
+impl SecurityRequirement {
+    /// Returns the numeric score for this metric per CVSS v2.0 specification.
+    pub fn score(&self) -> f64 {
+        match self {
+            SecurityRequirement::Low => 0.5,
+            SecurityRequirement::Medium => 1.0,
+            SecurityRequirement::High => 1.51,
+            SecurityRequirement::NotDefined => 1.0,
+        }
+    }
+}
+
+fn round_to_first_decimal(value: f64) -> f64 {
+    (value * 10.0).round() / 10.0
+}
+
+enum ImpactKind {
+    WithImpact,
+    WithAdjustedImpact,
 }
 
 impl CvssV2 {
@@ -281,60 +367,184 @@ impl CvssV2 {
     }
 
     /// Calculates the base score from the base metrics.
-    /// Returns None if required base metrics are missing.
+    ///
+    /// Required base metrics are:
+    /// - Access Vector
+    /// - Access Complexity
+    /// - Authentication
+    /// - Confidentiality Impact
+    /// - Integrity Impact
+    /// - Availability Impact
+    ///
+    /// Further information can be found in the
+    /// [CVSS v2.0 specification Base Equation](https://www.first.org/cvss/v2/guide#3-2-1-Base-Equation).
+    ///
+    /// # Returns
+    ///
+    /// - `Some(base_score)` if the required base metrics are present.
+    /// - `None` if any of the required base metrics are missing.
     pub fn calculated_base_score(&self) -> Option<f64> {
+        // the base score is calculated with the "regular" impact
+        self.calculate_base_score(ImpactKind::WithImpact)
+    }
+
+    /// Calculates the base score from the base metrics and an enum to select which impact score to use.
+    ///
+    /// Required base metrics are:
+    /// - Access Vector
+    /// - Access Complexity
+    /// - Authentication
+    /// - Confidentiality Impact
+    /// - Integrity Impact
+    /// - Availability Impact
+    ///
+    /// Further information can be found in the
+    /// [CVSS v2.0 specification Base Equation](https://www.first.org/cvss/v2/guide#3-2-1-Base-Equation) and
+    /// [CVSS v2.0 specification Environmental Equation](https://www.first.org/cvss/v2/guide#3-2-3-Environmental-Equation).
+    ///
+    /// # Arguments
+    ///
+    /// * `impact` - Either `ImpactKind::WithImpact` or `ImpactKind::WithAdjustedImpact` to select
+    ///   which impact score to be used in the base score calculation.
+    ///
+    /// # Returns
+    ///
+    /// - `Some(base_score)` if the required base metrics are present.
+    /// - `None` if any of the required base metrics are missing.
+    fn calculate_base_score(&self, impact_kind: ImpactKind) -> Option<f64> {
         // All base metrics are required
+        let ci = self.confidentiality_impact.as_ref()?;
+        let ii = self.integrity_impact.as_ref()?;
+        let ai = self.availability_impact.as_ref()?;
         let av = self.access_vector.as_ref()?;
         let ac = self.access_complexity.as_ref()?;
         let au = self.authentication.as_ref()?;
-        let c = self.confidentiality_impact.as_ref()?;
-        let i = self.integrity_impact.as_ref()?;
-        let a = self.availability_impact.as_ref()?;
 
-        // Calculate impact
-        let impact = 10.41 * (1.0 - (1.0 - c.score()) * (1.0 - i.score()) * (1.0 - a.score()));
+        // Calculate impact specified in `impact` argument.
+        let impact_score = match impact_kind {
+            ImpactKind::WithImpact => {
+                10.41 * (1.0 - (1.0 - ci.score()) * (1.0 - ii.score()) * (1.0 - ai.score()))
+            }
+            ImpactKind::WithAdjustedImpact => {
+                // requirement scores default to 1.0 (not defined) if not specified
+                let cr = self
+                    .confidentiality_requirement
+                    .as_ref()
+                    .map_or(1.0, |v| v.score());
+                let ir = self
+                    .integrity_requirement
+                    .as_ref()
+                    .map_or(1.0, |v| v.score());
+                let ar = self
+                    .availability_requirement
+                    .as_ref()
+                    .map_or(1.0, |v| v.score());
+
+                (10.41
+                    * (1.0
+                        - (1.0 - ci.score() * cr)
+                            * (1.0 - ii.score() * ir)
+                            * (1.0 - ai.score() * ar)))
+                    .min(10.0)
+            }
+        };
 
         // Calculate exploitability
         let exploitability = 20.0 * av.score() * ac.score() * au.score();
 
         // f(impact) = 0 if impact = 0, else 1.176
-        let f_impact = if impact == 0.0 { 0.0 } else { 1.176 };
+        let f_impact = if impact_score == 0.0 { 0.0 } else { 1.176 };
 
         // Calculate base score
-        let score = ((0.6 * impact) + (0.4 * exploitability) - 1.5) * f_impact;
+        let score = ((0.6 * impact_score) + (0.4 * exploitability) - 1.5) * f_impact;
 
         // Round to 1 decimal place
-        Some((score * 10.0).round() / 10.0)
+        Some(round_to_first_decimal(score))
     }
 
-    /// Calculates the temporal score from base and temporal metrics.
-    /// Returns None if required base metrics are missing.
+    /// Calculates the temporal score from the base metrics and temporal metrics.
     ///
-    /// Note: CVSS v2.0 temporal metrics are not commonly used in this library's schema,
-    /// but the calculation is provided for completeness.
+    /// Required metrics for the base score calculation are:
+    /// - Access Vector
+    /// - Access Complexity
+    /// - Authentication
+    /// - Confidentiality Impact
+    /// - Integrity Impact
+    /// - Availability Impact
+    ///
+    /// # Returns
+    ///
+    /// - `Some(temporal_score)` if the required base metrics are present.
+    /// - `None` if any of the required base metrics are missing.
     pub fn calculated_temporal_score(&self) -> Option<f64> {
-        let base_score = self.calculated_base_score()?;
-
-        // CVSS v2.0 temporal metrics are not defined in the current schema
-        // If they were, they would be: Exploitability, RemediationLevel, ReportConfidence
-        // For now, we just return the base score since temporal metrics aren't in the struct
-
-        Some(base_score)
+        // the temporal score is calculated with the "regular" impact
+        self.calculate_temporal_score(ImpactKind::WithImpact)
     }
 
-    /// Calculates the environmental score from base, temporal, and environmental metrics.
-    /// Returns None if required base metrics are missing.
+    /// Calculates the temporal score based on the calculated base score, an enum to select the impact
+    /// score to use for the base score calculation, and temporal metrics.
     ///
-    /// Note: CVSS v2.0 environmental metrics are not commonly used in this library's schema,
-    /// but the calculation is provided for completeness.
+    /// Further information can be found in the
+    /// [CVSS v2.0 specification Temporal Equation](https://www.first.org/cvss/v2/guide#3-2-2-Temporal-Equation).
+    ///
+    /// # Arguments
+    ///
+    /// * `impact` - Either `ImpactKind::WithImpact` or `ImpactKind::WithAdjustedImpact` to select
+    ///   which impact score to be used in the base score calculation.
+    ///
+    /// # Returns
+    ///
+    /// - `Some(temporal_score)` if the required base metrics are present.
+    /// - `None` if any of the required base metrics are missing.
+    fn calculate_temporal_score(&self, impact: ImpactKind) -> Option<f64> {
+        // calculate base score with specified impact
+        let base_score = self.calculate_base_score(impact)?;
+
+        // Temporal metrics default to 1.0 (not defined) if not specified
+        let exploitability = self.exploitability.as_ref().map_or(1.0, |e| e.score());
+        let remediation_level = self.remediation_level.as_ref().map_or(1.0, |r| r.score());
+        let report_confidence = self.report_confidence.as_ref().map_or(1.0, |r| r.score());
+
+        // calculate temporal score
+        let temporal_score = base_score * exploitability * remediation_level * report_confidence;
+
+        // round to 1 decimal place
+        Some(round_to_first_decimal(temporal_score))
+    }
+
+    /// Calculates the environmental score from the base, temporal and environmental metrics.
+    ///
+    /// Required metrics for the base score calculation are:
+    /// - Access Vector
+    /// - Access Complexity
+    /// - Authentication
+    /// - Confidentiality Impact
+    /// - Integrity Impact
+    /// - Availability Impact
+    ///
+    /// Further information can be found in the
+    /// [CVSS v2.0 specification](https://www.first.org/cvss/v2/guide#3-2-3-Environmental-Equation).
+    ///
+    /// # Returns
+    ///
+    /// - `Some(environmental_score)` if the required base metrics are present.
+    /// - `None` if any required base metrics are missing.
     pub fn calculated_environmental_score(&self) -> Option<f64> {
-        let temporal_score = self.calculated_temporal_score()?;
+        // the environmental score is calculated with the "adjusted" impact used in the base score
+        let adjusted_temporal = self.calculate_temporal_score(ImpactKind::WithAdjustedImpact)?;
 
-        // CVSS v2.0 environmental metrics are not defined in the current schema
-        // If they were, they would include: CollateralDamagePotential, TargetDistribution, etc.
-        // For now, we just return the temporal score since environmental metrics aren't in the struct
+        // Environmental metrics default to "not defined" (0.0 for CDP, 1.0 for TD) if not specified
+        let cdp = self
+            .collateral_damage_potential
+            .as_ref()
+            .map_or(0.0, |v| v.score());
+        let td = self.target_distribution.as_ref().map_or(1.0, |v| v.score());
 
-        Some(temporal_score)
+        // calculate environmental score
+        let environmental_score = (adjusted_temporal + (10.0 - adjusted_temporal) * cdp) * td;
+
+        // round to 1 decimal place
+        Some(round_to_first_decimal(environmental_score))
     }
 }
 
