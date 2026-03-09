@@ -466,15 +466,47 @@ impl CvssV3 {
         let i = self.integrity_impact.as_ref()?;
         let a = self.availability_impact.as_ref()?;
 
-        // Modified metrics default to base metrics if not defined
-        let mav = self.modified_attack_vector.as_ref().unwrap_or(av);
-        let mac = self.modified_attack_complexity.as_ref().unwrap_or(ac);
-        let mpr = self.modified_privileges_required.as_ref().unwrap_or(pr);
-        let mui = self.modified_user_interaction.as_ref().unwrap_or(ui);
-        let ms = self.modified_scope.as_ref().unwrap_or(scope);
-        let mc = self.modified_confidentiality_impact.as_ref().unwrap_or(c);
-        let mi = self.modified_integrity_impact.as_ref().unwrap_or(i);
-        let ma = self.modified_availability_impact.as_ref().unwrap_or(a);
+        // Modified metrics: if not present or set to NotDefined (X), fall back to base metric
+        let mav = self
+            .modified_attack_vector
+            .as_ref()
+            .filter(|v| !matches!(v, AttackVector::NotDefined))
+            .unwrap_or(av);
+        let mac = self
+            .modified_attack_complexity
+            .as_ref()
+            .filter(|v| !matches!(v, AttackComplexity::NotDefined))
+            .unwrap_or(ac);
+        let mpr = self
+            .modified_privileges_required
+            .as_ref()
+            .filter(|v| !matches!(v, PrivilegesRequired::NotDefined))
+            .unwrap_or(pr);
+        let mui = self
+            .modified_user_interaction
+            .as_ref()
+            .filter(|v| !matches!(v, UserInteraction::NotDefined))
+            .unwrap_or(ui);
+        let ms = self
+            .modified_scope
+            .as_ref()
+            .filter(|v| !matches!(v, Scope::NotDefined))
+            .unwrap_or(scope);
+        let mc = self
+            .modified_confidentiality_impact
+            .as_ref()
+            .filter(|v| !matches!(v, Impact::NotDefined))
+            .unwrap_or(c);
+        let mi = self
+            .modified_integrity_impact
+            .as_ref()
+            .filter(|v| !matches!(v, Impact::NotDefined))
+            .unwrap_or(i);
+        let ma = self
+            .modified_availability_impact
+            .as_ref()
+            .filter(|v| !matches!(v, Impact::NotDefined))
+            .unwrap_or(a);
 
         // Security requirements default to 1.0 (Medium/NotDefined)
         let cr = self

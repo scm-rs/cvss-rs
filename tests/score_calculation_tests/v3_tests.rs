@@ -77,3 +77,30 @@ fn test_v3_zero_impact_score() {
         .expect("Failed to calculate score");
     assert_eq!(calculated_score, 0.0);
 }
+
+#[test]
+fn test_v3_cve_with_explicit_not_defined() {
+    // This vector is based on an issue brought up here: https://github.com/scm-rs/cvss-rs/issues/9
+    // This tests that explicit `NotDefined` / `X` values in the modified metrics used in the
+    // environmental score calculation are handled correctly / like implicit
+    // "NotDefined" values caused by absence in the vector string.
+    let vector =
+        "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H/MAV:A/MAC:L/MPR:N/MUI:X/MS:U/CR:L/IR:H/AR:X";
+    let cvss = CvssV3::from_str(vector).expect("Failed to parse CVSS v3.1 vector");
+
+    let base_score = cvss
+        .calculated_base_score()
+        .expect("Failed to calculate base score");
+
+    let temporal_score = cvss
+        .calculated_temporal_score()
+        .expect("Failed to calculate temporal score");
+
+    let environmental_score = cvss
+        .calculated_environmental_score()
+        .expect("Failed to calculate environmental score");
+
+    assert_eq!(base_score, 7.8);
+    assert_eq!(temporal_score, 7.8);
+    assert_eq!(environmental_score, 8.0);
+}
