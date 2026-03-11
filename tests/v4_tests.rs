@@ -73,3 +73,22 @@ fn test_v4_0_cve_2020_36855() {
     let score = cvss.calculated_base_score().unwrap();
     assert_eq!(score, 4.8);
 }
+
+#[test]
+fn test_v4_0_all_metrics_not_defined() {
+    // Test vector from trustify that was failing due to "X" (NotDefined) values
+    // All optional metrics are set to X (NotDefined) per CVSS v4.0 spec
+    let vector = "CVSS:4.0/AV:N/AC:L/AT:N/PR:H/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X";
+    let cvss = CvssV4::from_str(vector).expect("Should parse vector with X (NotDefined) values");
+
+    // Verify that the parsed CVSS object can calculate a score
+    let score = cvss
+        .calculated_base_score()
+        .expect("Should calculate base score");
+    assert!(score > 0.0, "Score should be positive");
+
+    // CR:X, IR:X, AR:X default to High per CVSS v4.0 spec, which affects EQ6
+    // The score with all modified metrics as NotDefined (defaulting to base values)
+    // and requirements as High produces 8.6
+    assert_eq!(score, 8.6);
+}
