@@ -88,37 +88,58 @@ impl MacroVector {
 }
 
 // Helper functions to merge base metrics with modified/environmental metrics
-// Modified metrics override base metrics if present
+// Modified metrics override base metrics if present and not NotDefined
 
 fn merge_av(base: AttackVector, modified: Option<AttackVector>) -> AttackVector {
-    modified.unwrap_or(base)
+    match modified {
+        Some(AttackVector::NotDefined) | None => base,
+        Some(other) => other,
+    }
 }
 
 fn merge_ac(base: AttackComplexity, modified: Option<AttackComplexity>) -> AttackComplexity {
-    modified.unwrap_or(base)
+    match modified {
+        Some(AttackComplexity::NotDefined) | None => base,
+        Some(other) => other,
+    }
 }
 
 fn merge_at(base: AttackRequirements, modified: Option<AttackRequirements>) -> AttackRequirements {
-    modified.unwrap_or(base)
+    match modified {
+        Some(AttackRequirements::NotDefined) | None => base,
+        Some(other) => other,
+    }
 }
 
 fn merge_pr(base: PrivilegesRequired, modified: Option<PrivilegesRequired>) -> PrivilegesRequired {
-    modified.unwrap_or(base)
+    match modified {
+        Some(PrivilegesRequired::NotDefined) | None => base,
+        Some(other) => other,
+    }
 }
 
 fn merge_ui(base: UserInteraction, modified: Option<UserInteraction>) -> UserInteraction {
-    modified.unwrap_or(base)
+    match modified {
+        Some(UserInteraction::NotDefined) | None => base,
+        Some(other) => other,
+    }
 }
 
 fn merge_impact(base: Impact, modified: Option<Impact>) -> Impact {
-    modified.unwrap_or(base)
+    match modified {
+        Some(Impact::NotDefined) | None => base,
+        Some(other) => other,
+    }
 }
 
 fn merge_subsequent_impact(
     base: SubsequentImpact,
     modified: Option<SubsequentImpact>,
 ) -> SubsequentImpact {
-    modified.unwrap_or(base)
+    match modified {
+        Some(SubsequentImpact::NotDefined) | None => base,
+        Some(other) => other,
+    }
 }
 
 fn merge_exploit_maturity(e: Option<ExploitMaturity>) -> ExploitMaturity {
@@ -129,7 +150,10 @@ fn merge_exploit_maturity(e: Option<ExploitMaturity>) -> ExploitMaturity {
 }
 
 fn merge_requirement(r: Option<Requirement>) -> Requirement {
-    r.unwrap_or(Requirement::High)
+    match r {
+        Some(Requirement::NotDefined) | None => Requirement::High,
+        Some(other) => other,
+    }
 }
 
 /// Calculate EQ1: Exploitation complexity (AV, PR, UI)

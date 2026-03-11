@@ -149,12 +149,14 @@ pub enum AttackVector {
     Local,
     #[strum(serialize = "P")]
     Physical,
+    #[strum(serialize = "X")]
+    NotDefined,
 }
 
 impl AttackVector {
     pub fn level(&self) -> f64 {
         match self {
-            AttackVector::Network => 0.0,
+            AttackVector::Network | AttackVector::NotDefined => 0.0,
             AttackVector::Adjacent => 0.1,
             AttackVector::Local => 0.2,
             AttackVector::Physical => 0.3,
@@ -170,12 +172,14 @@ pub enum AttackComplexity {
     Low,
     #[strum(serialize = "H")]
     High,
+    #[strum(serialize = "X")]
+    NotDefined,
 }
 
 impl AttackComplexity {
     pub fn level(&self) -> f64 {
         match self {
-            AttackComplexity::Low => 0.0,
+            AttackComplexity::Low | AttackComplexity::NotDefined => 0.0,
             AttackComplexity::High => 0.1,
         }
     }
@@ -189,12 +193,14 @@ pub enum AttackRequirements {
     None,
     #[strum(serialize = "P")]
     Present,
+    #[strum(serialize = "X")]
+    NotDefined,
 }
 
 impl AttackRequirements {
     pub fn level(&self) -> f64 {
         match self {
-            AttackRequirements::None => 0.0,
+            AttackRequirements::None | AttackRequirements::NotDefined => 0.0,
             AttackRequirements::Present => 0.1,
         }
     }
@@ -210,12 +216,14 @@ pub enum PrivilegesRequired {
     Low,
     #[strum(serialize = "H")]
     High,
+    #[strum(serialize = "X")]
+    NotDefined,
 }
 
 impl PrivilegesRequired {
     pub fn level(&self) -> f64 {
         match self {
-            PrivilegesRequired::None => 0.0,
+            PrivilegesRequired::None | PrivilegesRequired::NotDefined => 0.0,
             PrivilegesRequired::Low => 0.1,
             PrivilegesRequired::High => 0.2,
         }
@@ -232,12 +240,14 @@ pub enum UserInteraction {
     Passive,
     #[strum(serialize = "A")]
     Active,
+    #[strum(serialize = "X")]
+    NotDefined,
 }
 
 impl UserInteraction {
     pub fn level(&self) -> f64 {
         match self {
-            UserInteraction::None => 0.0,
+            UserInteraction::None | UserInteraction::NotDefined => 0.0,
             UserInteraction::Passive => 0.1,
             UserInteraction::Active => 0.2,
         }
@@ -254,12 +264,14 @@ pub enum Impact {
     Low,
     #[strum(serialize = "N")]
     None,
+    #[strum(serialize = "X")]
+    NotDefined,
 }
 
 impl Impact {
     pub fn level(&self) -> f64 {
         match self {
-            Impact::High => 0.0,
+            Impact::High | Impact::NotDefined => 0.0,
             Impact::Low => 0.1,
             Impact::None => 0.2,
         }
@@ -279,12 +291,14 @@ pub enum SubsequentImpact {
     Low,
     #[strum(serialize = "N")]
     None,
+    #[strum(serialize = "X")]
+    NotDefined,
 }
 
 impl SubsequentImpact {
     pub fn level(&self) -> f64 {
         match self {
-            SubsequentImpact::Safety => 0.0,
+            SubsequentImpact::Safety | SubsequentImpact::NotDefined => 0.0,
             SubsequentImpact::High => 0.1,
             SubsequentImpact::Low => 0.2,
             SubsequentImpact::None => 0.3,
@@ -327,12 +341,14 @@ pub enum Requirement {
     Medium,
     #[strum(serialize = "L")]
     Low,
+    #[strum(serialize = "X")]
+    NotDefined,
 }
 
 impl Requirement {
     pub fn level(&self) -> f64 {
         match self {
-            Requirement::High => 0.0,
+            Requirement::High | Requirement::NotDefined => 0.0,
             Requirement::Medium => 0.1,
             Requirement::Low => 0.2,
         }
