@@ -88,57 +88,73 @@ impl MacroVector {
 }
 
 // Helper functions to merge base metrics with modified/environmental metrics
-// Modified metrics override base metrics if present and not NotDefined
+// Modified metrics override base metrics if present and not NotDefined.
+// Each function explicitly maps Modified* variants to base types so the
+// type system prevents base metrics (AV, AC, etc.) from ever accepting "X".
 
-fn merge_av(base: AttackVector, modified: Option<AttackVector>) -> AttackVector {
+fn merge_av(base: AttackVector, modified: Option<ModifiedAttackVector>) -> AttackVector {
     match modified {
-        Some(AttackVector::NotDefined) | None => base,
-        Some(other) => other,
+        Some(ModifiedAttackVector::NotDefined) | None => base,
+        Some(ModifiedAttackVector::Network) => AttackVector::Network,
+        Some(ModifiedAttackVector::Adjacent) => AttackVector::Adjacent,
+        Some(ModifiedAttackVector::Local) => AttackVector::Local,
+        Some(ModifiedAttackVector::Physical) => AttackVector::Physical,
     }
 }
 
-fn merge_ac(base: AttackComplexity, modified: Option<AttackComplexity>) -> AttackComplexity {
+fn merge_ac(base: AttackComplexity, modified: Option<ModifiedAttackComplexity>) -> AttackComplexity {
     match modified {
-        Some(AttackComplexity::NotDefined) | None => base,
-        Some(other) => other,
+        Some(ModifiedAttackComplexity::NotDefined) | None => base,
+        Some(ModifiedAttackComplexity::Low) => AttackComplexity::Low,
+        Some(ModifiedAttackComplexity::High) => AttackComplexity::High,
     }
 }
 
-fn merge_at(base: AttackRequirements, modified: Option<AttackRequirements>) -> AttackRequirements {
+fn merge_at(base: AttackRequirements, modified: Option<ModifiedAttackRequirements>) -> AttackRequirements {
     match modified {
-        Some(AttackRequirements::NotDefined) | None => base,
-        Some(other) => other,
+        Some(ModifiedAttackRequirements::NotDefined) | None => base,
+        Some(ModifiedAttackRequirements::None) => AttackRequirements::None,
+        Some(ModifiedAttackRequirements::Present) => AttackRequirements::Present,
     }
 }
 
-fn merge_pr(base: PrivilegesRequired, modified: Option<PrivilegesRequired>) -> PrivilegesRequired {
+fn merge_pr(base: PrivilegesRequired, modified: Option<ModifiedPrivilegesRequired>) -> PrivilegesRequired {
     match modified {
-        Some(PrivilegesRequired::NotDefined) | None => base,
-        Some(other) => other,
+        Some(ModifiedPrivilegesRequired::NotDefined) | None => base,
+        Some(ModifiedPrivilegesRequired::None) => PrivilegesRequired::None,
+        Some(ModifiedPrivilegesRequired::Low) => PrivilegesRequired::Low,
+        Some(ModifiedPrivilegesRequired::High) => PrivilegesRequired::High,
     }
 }
 
-fn merge_ui(base: UserInteraction, modified: Option<UserInteraction>) -> UserInteraction {
+fn merge_ui(base: UserInteraction, modified: Option<ModifiedUserInteraction>) -> UserInteraction {
     match modified {
-        Some(UserInteraction::NotDefined) | None => base,
-        Some(other) => other,
+        Some(ModifiedUserInteraction::NotDefined) | None => base,
+        Some(ModifiedUserInteraction::None) => UserInteraction::None,
+        Some(ModifiedUserInteraction::Passive) => UserInteraction::Passive,
+        Some(ModifiedUserInteraction::Active) => UserInteraction::Active,
     }
 }
 
-fn merge_impact(base: Impact, modified: Option<Impact>) -> Impact {
+fn merge_impact(base: Impact, modified: Option<ModifiedImpact>) -> Impact {
     match modified {
-        Some(Impact::NotDefined) | None => base,
-        Some(other) => other,
+        Some(ModifiedImpact::NotDefined) | None => base,
+        Some(ModifiedImpact::High) => Impact::High,
+        Some(ModifiedImpact::Low) => Impact::Low,
+        Some(ModifiedImpact::None) => Impact::None,
     }
 }
 
 fn merge_subsequent_impact(
     base: SubsequentImpact,
-    modified: Option<SubsequentImpact>,
+    modified: Option<ModifiedSubsequentImpact>,
 ) -> SubsequentImpact {
     match modified {
-        Some(SubsequentImpact::NotDefined) | None => base,
-        Some(other) => other,
+        Some(ModifiedSubsequentImpact::NotDefined) | None => base,
+        Some(ModifiedSubsequentImpact::Safety) => SubsequentImpact::Safety,
+        Some(ModifiedSubsequentImpact::High) => SubsequentImpact::High,
+        Some(ModifiedSubsequentImpact::Low) => SubsequentImpact::Low,
+        Some(ModifiedSubsequentImpact::None) => SubsequentImpact::None,
     }
 }
 
