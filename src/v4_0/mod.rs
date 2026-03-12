@@ -76,37 +76,37 @@ pub struct CvssV4 {
     pub availability_requirement: Option<Requirement>,
     /// Modified Attack Vector (MAV).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub modified_attack_vector: Option<AttackVector>,
+    pub modified_attack_vector: Option<ModifiedAttackVector>,
     /// Modified Attack Complexity (MAC).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub modified_attack_complexity: Option<AttackComplexity>,
+    pub modified_attack_complexity: Option<ModifiedAttackComplexity>,
     /// Modified Attack Requirements (MAT).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub modified_attack_requirements: Option<AttackRequirements>,
+    pub modified_attack_requirements: Option<ModifiedAttackRequirements>,
     /// Modified Privileges Required (MPR).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub modified_privileges_required: Option<PrivilegesRequired>,
+    pub modified_privileges_required: Option<ModifiedPrivilegesRequired>,
     /// Modified User Interaction (MUI).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub modified_user_interaction: Option<UserInteraction>,
+    pub modified_user_interaction: Option<ModifiedUserInteraction>,
     /// Modified Vulnerable System Confidentiality Impact (MVC).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub modified_vuln_confidentiality_impact: Option<Impact>,
+    pub modified_vuln_confidentiality_impact: Option<ModifiedImpact>,
     /// Modified Vulnerable System Integrity Impact (MVI).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub modified_vuln_integrity_impact: Option<Impact>,
+    pub modified_vuln_integrity_impact: Option<ModifiedImpact>,
     /// Modified Vulnerable System Availability Impact (MVA).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub modified_vuln_availability_impact: Option<Impact>,
+    pub modified_vuln_availability_impact: Option<ModifiedImpact>,
     /// Modified Subsequent System Confidentiality Impact (MSC).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub modified_sub_confidentiality_impact: Option<SubsequentImpact>,
+    pub modified_sub_confidentiality_impact: Option<ModifiedSubsequentImpact>,
     /// Modified Subsequent System Integrity Impact (MSI).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub modified_sub_integrity_impact: Option<SubsequentImpact>,
+    pub modified_sub_integrity_impact: Option<ModifiedSubsequentImpact>,
     /// Modified Subsequent System Availability Impact (MSA).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub modified_sub_availability_impact: Option<SubsequentImpact>,
+    pub modified_sub_availability_impact: Option<ModifiedSubsequentImpact>,
 
     // --- Supplemental Metrics ---
     #[serde(rename = "Safety")]
@@ -137,10 +137,35 @@ pub enum Severity {
     Critical,
 }
 
-/// Attack Vector (AV) / Modified Attack Vector (MAV).
+/// Attack Vector (AV).
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum AttackVector {
+    #[strum(serialize = "N")]
+    Network,
+    #[strum(serialize = "A")]
+    Adjacent,
+    #[strum(serialize = "L")]
+    Local,
+    #[strum(serialize = "P")]
+    Physical,
+}
+
+impl AttackVector {
+    pub fn level(&self) -> f64 {
+        match self {
+            AttackVector::Network => 0.0,
+            AttackVector::Adjacent => 0.1,
+            AttackVector::Local => 0.2,
+            AttackVector::Physical => 0.3,
+        }
+    }
+}
+
+/// Modified Attack Vector (MAV). Extends AttackVector with NotDefined (X).
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ModifiedAttackVector {
     #[strum(serialize = "N")]
     Network,
     #[strum(serialize = "A")]
@@ -153,21 +178,29 @@ pub enum AttackVector {
     NotDefined,
 }
 
-impl AttackVector {
+/// Attack Complexity (AC).
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum AttackComplexity {
+    #[strum(serialize = "L")]
+    Low,
+    #[strum(serialize = "H")]
+    High,
+}
+
+impl AttackComplexity {
     pub fn level(&self) -> f64 {
         match self {
-            AttackVector::Network | AttackVector::NotDefined => 0.0,
-            AttackVector::Adjacent => 0.1,
-            AttackVector::Local => 0.2,
-            AttackVector::Physical => 0.3,
+            AttackComplexity::Low => 0.0,
+            AttackComplexity::High => 0.1,
         }
     }
 }
 
-/// Attack Complexity (AC) / Modified Attack Complexity (MAC).
+/// Modified Attack Complexity (MAC). Extends AttackComplexity with NotDefined (X).
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
-pub enum AttackComplexity {
+pub enum ModifiedAttackComplexity {
     #[strum(serialize = "L")]
     Low,
     #[strum(serialize = "H")]
@@ -176,19 +209,29 @@ pub enum AttackComplexity {
     NotDefined,
 }
 
-impl AttackComplexity {
+/// Attack Requirements (AT).
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum AttackRequirements {
+    #[strum(serialize = "N")]
+    None,
+    #[strum(serialize = "P")]
+    Present,
+}
+
+impl AttackRequirements {
     pub fn level(&self) -> f64 {
         match self {
-            AttackComplexity::Low | AttackComplexity::NotDefined => 0.0,
-            AttackComplexity::High => 0.1,
+            AttackRequirements::None => 0.0,
+            AttackRequirements::Present => 0.1,
         }
     }
 }
 
-/// Attack Requirements (AT) / Modified Attack Requirements (MAT).
+/// Modified Attack Requirements (MAT). Extends AttackRequirements with NotDefined (X).
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
-pub enum AttackRequirements {
+pub enum ModifiedAttackRequirements {
     #[strum(serialize = "N")]
     None,
     #[strum(serialize = "P")]
@@ -197,16 +240,7 @@ pub enum AttackRequirements {
     NotDefined,
 }
 
-impl AttackRequirements {
-    pub fn level(&self) -> f64 {
-        match self {
-            AttackRequirements::None | AttackRequirements::NotDefined => 0.0,
-            AttackRequirements::Present => 0.1,
-        }
-    }
-}
-
-/// Privileges Required (PR) / Modified Privileges Required (MPR).
+/// Privileges Required (PR).
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum PrivilegesRequired {
@@ -216,24 +250,58 @@ pub enum PrivilegesRequired {
     Low,
     #[strum(serialize = "H")]
     High,
-    #[strum(serialize = "X")]
-    NotDefined,
 }
 
 impl PrivilegesRequired {
     pub fn level(&self) -> f64 {
         match self {
-            PrivilegesRequired::None | PrivilegesRequired::NotDefined => 0.0,
+            PrivilegesRequired::None => 0.0,
             PrivilegesRequired::Low => 0.1,
             PrivilegesRequired::High => 0.2,
         }
     }
 }
 
-/// User Interaction (UI) / Modified User Interaction (MUI).
+/// Modified Privileges Required (MPR). Extends PrivilegesRequired with NotDefined (X).
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum ModifiedPrivilegesRequired {
+    #[strum(serialize = "N")]
+    None,
+    #[strum(serialize = "L")]
+    Low,
+    #[strum(serialize = "H")]
+    High,
+    #[strum(serialize = "X")]
+    NotDefined,
+}
+
+/// User Interaction (UI).
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum UserInteraction {
+    #[strum(serialize = "N")]
+    None,
+    #[strum(serialize = "P")]
+    Passive,
+    #[strum(serialize = "A")]
+    Active,
+}
+
+impl UserInteraction {
+    pub fn level(&self) -> f64 {
+        match self {
+            UserInteraction::None => 0.0,
+            UserInteraction::Passive => 0.1,
+            UserInteraction::Active => 0.2,
+        }
+    }
+}
+
+/// Modified User Interaction (MUI). Extends UserInteraction with NotDefined (X).
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum ModifiedUserInteraction {
     #[strum(serialize = "N")]
     None,
     #[strum(serialize = "P")]
@@ -244,20 +312,32 @@ pub enum UserInteraction {
     NotDefined,
 }
 
-impl UserInteraction {
+/// Impact metrics for vulnerable system (VC, VI, VA).
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum Impact {
+    #[strum(serialize = "H")]
+    High,
+    #[strum(serialize = "L")]
+    Low,
+    #[strum(serialize = "N")]
+    None,
+}
+
+impl Impact {
     pub fn level(&self) -> f64 {
         match self {
-            UserInteraction::None | UserInteraction::NotDefined => 0.0,
-            UserInteraction::Passive => 0.1,
-            UserInteraction::Active => 0.2,
+            Impact::High => 0.0,
+            Impact::Low => 0.1,
+            Impact::None => 0.2,
         }
     }
 }
 
-/// Impact metrics for vulnerable system (VC, VI, VA and their modified versions).
+/// Modified impact metrics for vulnerable system (MVC, MVI, MVA). Extends Impact with NotDefined (X).
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
-pub enum Impact {
+pub enum ModifiedImpact {
     #[strum(serialize = "H")]
     High,
     #[strum(serialize = "L")]
@@ -268,17 +348,7 @@ pub enum Impact {
     NotDefined,
 }
 
-impl Impact {
-    pub fn level(&self) -> f64 {
-        match self {
-            Impact::High | Impact::NotDefined => 0.0,
-            Impact::Low => 0.1,
-            Impact::None => 0.2,
-        }
-    }
-}
-
-/// Impact metrics for subsequent system (SC, SI, SA and their modified versions).
+/// Impact metrics for subsequent system (SC, SI, SA).
 /// Includes Safety variant which is unique to subsequent system impacts.
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "UPPERCASE")]
@@ -291,19 +361,33 @@ pub enum SubsequentImpact {
     Low,
     #[strum(serialize = "N")]
     None,
-    #[strum(serialize = "X")]
-    NotDefined,
 }
 
 impl SubsequentImpact {
     pub fn level(&self) -> f64 {
         match self {
-            SubsequentImpact::Safety | SubsequentImpact::NotDefined => 0.0,
+            SubsequentImpact::Safety => 0.0,
             SubsequentImpact::High => 0.1,
             SubsequentImpact::Low => 0.2,
             SubsequentImpact::None => 0.3,
         }
     }
+}
+
+/// Modified impact metrics for subsequent system (MSC, MSI, MSA). Extends SubsequentImpact with NotDefined (X).
+#[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum ModifiedSubsequentImpact {
+    #[strum(serialize = "S")]
+    Safety,
+    #[strum(serialize = "H")]
+    High,
+    #[strum(serialize = "L")]
+    Low,
+    #[strum(serialize = "N")]
+    None,
+    #[strum(serialize = "X")]
+    NotDefined,
 }
 
 /// Exploit Maturity (E).
@@ -713,77 +797,77 @@ impl FromStr for CvssV4 {
                 }
                 "MAV" => {
                     cvss.modified_attack_vector =
-                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                        Some(value.parse::<ModifiedAttackVector>().map_err(|_| ParseError::InvalidMetricValue {
                             metric: key.clone(),
                             value: value.clone(),
                         })?);
                 }
                 "MAC" => {
                     cvss.modified_attack_complexity =
-                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                        Some(value.parse::<ModifiedAttackComplexity>().map_err(|_| ParseError::InvalidMetricValue {
                             metric: key.clone(),
                             value: value.clone(),
                         })?);
                 }
                 "MAT" => {
                     cvss.modified_attack_requirements =
-                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                        Some(value.parse::<ModifiedAttackRequirements>().map_err(|_| ParseError::InvalidMetricValue {
                             metric: key.clone(),
                             value: value.clone(),
                         })?);
                 }
                 "MPR" => {
                     cvss.modified_privileges_required =
-                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                        Some(value.parse::<ModifiedPrivilegesRequired>().map_err(|_| ParseError::InvalidMetricValue {
                             metric: key.clone(),
                             value: value.clone(),
                         })?);
                 }
                 "MUI" => {
                     cvss.modified_user_interaction =
-                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                        Some(value.parse::<ModifiedUserInteraction>().map_err(|_| ParseError::InvalidMetricValue {
                             metric: key.clone(),
                             value: value.clone(),
                         })?);
                 }
                 "MVC" => {
                     cvss.modified_vuln_confidentiality_impact =
-                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                        Some(value.parse::<ModifiedImpact>().map_err(|_| ParseError::InvalidMetricValue {
                             metric: key.clone(),
                             value: value.clone(),
                         })?);
                 }
                 "MVI" => {
                     cvss.modified_vuln_integrity_impact =
-                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                        Some(value.parse::<ModifiedImpact>().map_err(|_| ParseError::InvalidMetricValue {
                             metric: key.clone(),
                             value: value.clone(),
                         })?);
                 }
                 "MVA" => {
                     cvss.modified_vuln_availability_impact =
-                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                        Some(value.parse::<ModifiedImpact>().map_err(|_| ParseError::InvalidMetricValue {
                             metric: key.clone(),
                             value: value.clone(),
                         })?);
                 }
                 "MSC" => {
                     cvss.modified_sub_confidentiality_impact =
-                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                        Some(value.parse::<ModifiedSubsequentImpact>().map_err(|_| ParseError::InvalidMetricValue {
                             metric: key.clone(),
                             value: value.clone(),
                         })?);
                 }
                 "MSI" => {
                     cvss.modified_sub_integrity_impact =
-                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                        Some(value.parse::<ModifiedSubsequentImpact>().map_err(|_| ParseError::InvalidMetricValue {
                             metric: key.clone(),
                             value: value.clone(),
                         })?);
                 }
                 "MSA" => {
                     cvss.modified_sub_availability_impact =
-                        Some(value.parse().map_err(|_| ParseError::InvalidMetricValue {
+                        Some(value.parse::<ModifiedSubsequentImpact>().map_err(|_| ParseError::InvalidMetricValue {
                             metric: key.clone(),
                             value: value.clone(),
                         })?);
