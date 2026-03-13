@@ -102,7 +102,10 @@ fn merge_av(base: AttackVector, modified: Option<ModifiedAttackVector>) -> Attac
     }
 }
 
-fn merge_ac(base: AttackComplexity, modified: Option<ModifiedAttackComplexity>) -> AttackComplexity {
+fn merge_ac(
+    base: AttackComplexity,
+    modified: Option<ModifiedAttackComplexity>,
+) -> AttackComplexity {
     match modified {
         Some(ModifiedAttackComplexity::NotDefined) | None => base,
         Some(ModifiedAttackComplexity::Low) => AttackComplexity::Low,
@@ -110,7 +113,10 @@ fn merge_ac(base: AttackComplexity, modified: Option<ModifiedAttackComplexity>) 
     }
 }
 
-fn merge_at(base: AttackRequirements, modified: Option<ModifiedAttackRequirements>) -> AttackRequirements {
+fn merge_at(
+    base: AttackRequirements,
+    modified: Option<ModifiedAttackRequirements>,
+) -> AttackRequirements {
     match modified {
         Some(ModifiedAttackRequirements::NotDefined) | None => base,
         Some(ModifiedAttackRequirements::None) => AttackRequirements::None,
@@ -118,7 +124,10 @@ fn merge_at(base: AttackRequirements, modified: Option<ModifiedAttackRequirement
     }
 }
 
-fn merge_pr(base: PrivilegesRequired, modified: Option<ModifiedPrivilegesRequired>) -> PrivilegesRequired {
+fn merge_pr(
+    base: PrivilegesRequired,
+    modified: Option<ModifiedPrivilegesRequired>,
+) -> PrivilegesRequired {
     match modified {
         Some(ModifiedPrivilegesRequired::NotDefined) | None => base,
         Some(ModifiedPrivilegesRequired::None) => PrivilegesRequired::None,
