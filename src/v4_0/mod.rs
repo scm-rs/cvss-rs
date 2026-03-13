@@ -797,79 +797,101 @@ impl FromStr for CvssV4 {
                 }
                 "MAV" => {
                     cvss.modified_attack_vector =
-                        Some(value.parse::<ModifiedAttackVector>().map_err(|_| ParseError::InvalidMetricValue {
-                            metric: key.clone(),
-                            value: value.clone(),
+                        Some(value.parse::<ModifiedAttackVector>().map_err(|_| {
+                            ParseError::InvalidMetricValue {
+                                metric: key.clone(),
+                                value: value.clone(),
+                            }
                         })?);
                 }
                 "MAC" => {
                     cvss.modified_attack_complexity =
-                        Some(value.parse::<ModifiedAttackComplexity>().map_err(|_| ParseError::InvalidMetricValue {
-                            metric: key.clone(),
-                            value: value.clone(),
+                        Some(value.parse::<ModifiedAttackComplexity>().map_err(|_| {
+                            ParseError::InvalidMetricValue {
+                                metric: key.clone(),
+                                value: value.clone(),
+                            }
                         })?);
                 }
                 "MAT" => {
                     cvss.modified_attack_requirements =
-                        Some(value.parse::<ModifiedAttackRequirements>().map_err(|_| ParseError::InvalidMetricValue {
-                            metric: key.clone(),
-                            value: value.clone(),
+                        Some(value.parse::<ModifiedAttackRequirements>().map_err(|_| {
+                            ParseError::InvalidMetricValue {
+                                metric: key.clone(),
+                                value: value.clone(),
+                            }
                         })?);
                 }
                 "MPR" => {
                     cvss.modified_privileges_required =
-                        Some(value.parse::<ModifiedPrivilegesRequired>().map_err(|_| ParseError::InvalidMetricValue {
-                            metric: key.clone(),
-                            value: value.clone(),
+                        Some(value.parse::<ModifiedPrivilegesRequired>().map_err(|_| {
+                            ParseError::InvalidMetricValue {
+                                metric: key.clone(),
+                                value: value.clone(),
+                            }
                         })?);
                 }
                 "MUI" => {
                     cvss.modified_user_interaction =
-                        Some(value.parse::<ModifiedUserInteraction>().map_err(|_| ParseError::InvalidMetricValue {
-                            metric: key.clone(),
-                            value: value.clone(),
+                        Some(value.parse::<ModifiedUserInteraction>().map_err(|_| {
+                            ParseError::InvalidMetricValue {
+                                metric: key.clone(),
+                                value: value.clone(),
+                            }
                         })?);
                 }
                 "MVC" => {
                     cvss.modified_vuln_confidentiality_impact =
-                        Some(value.parse::<ModifiedImpact>().map_err(|_| ParseError::InvalidMetricValue {
-                            metric: key.clone(),
-                            value: value.clone(),
+                        Some(value.parse::<ModifiedImpact>().map_err(|_| {
+                            ParseError::InvalidMetricValue {
+                                metric: key.clone(),
+                                value: value.clone(),
+                            }
                         })?);
                 }
                 "MVI" => {
                     cvss.modified_vuln_integrity_impact =
-                        Some(value.parse::<ModifiedImpact>().map_err(|_| ParseError::InvalidMetricValue {
-                            metric: key.clone(),
-                            value: value.clone(),
+                        Some(value.parse::<ModifiedImpact>().map_err(|_| {
+                            ParseError::InvalidMetricValue {
+                                metric: key.clone(),
+                                value: value.clone(),
+                            }
                         })?);
                 }
                 "MVA" => {
                     cvss.modified_vuln_availability_impact =
-                        Some(value.parse::<ModifiedImpact>().map_err(|_| ParseError::InvalidMetricValue {
-                            metric: key.clone(),
-                            value: value.clone(),
+                        Some(value.parse::<ModifiedImpact>().map_err(|_| {
+                            ParseError::InvalidMetricValue {
+                                metric: key.clone(),
+                                value: value.clone(),
+                            }
                         })?);
                 }
                 "MSC" => {
                     cvss.modified_sub_confidentiality_impact =
-                        Some(value.parse::<ModifiedSubsequentImpact>().map_err(|_| ParseError::InvalidMetricValue {
-                            metric: key.clone(),
-                            value: value.clone(),
+                        Some(value.parse::<ModifiedSubsequentImpact>().map_err(|_| {
+                            ParseError::InvalidMetricValue {
+                                metric: key.clone(),
+                                value: value.clone(),
+                            }
                         })?);
                 }
                 "MSI" => {
                     cvss.modified_sub_integrity_impact =
-                        Some(value.parse::<ModifiedSubsequentImpact>().map_err(|_| ParseError::InvalidMetricValue {
-                            metric: key.clone(),
-                            value: value.clone(),
+                        Some(value.parse::<ModifiedSubsequentImpact>().map_err(|_| {
+                            ParseError::InvalidMetricValue {
+                                metric: key.clone(),
+                                value: value.clone(),
+                            }
                         })?);
                 }
                 "MSA" => {
                     cvss.modified_sub_availability_impact =
-                        Some(value.parse::<ModifiedSubsequentImpact>().map_err(|_| ParseError::InvalidMetricValue {
-                            metric: key.clone(),
-                            value: value.clone(),
+                        Some(value.parse::<ModifiedSubsequentImpact>().map_err(|_| {
+                            ParseError::InvalidMetricValue {
+                                metric: key.clone(),
+                                value: value.clone(),
+                            }
                         })?);
                 }
                 // Supplemental metrics
