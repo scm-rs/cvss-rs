@@ -112,90 +112,90 @@ fn test_v3_cve_with_some_not_defined() {
 #[test]
 fn test_real_cves() {
     // This test only exists in the v3.0 examples.
-    // first.org v3.0 CVE-2013-1937: https://www.first.org/cvss/v3.0/examples#phpMyAdmin-Reflected-Cross-site-Scripting-Vulnerability-CVE-2013-1937
+    // https://www.first.org/cvss/v3.0/examples#phpMyAdmin-Reflected-Cross-site-Scripting-Vulnerability-CVE-2013-1937
     assert_v3_base_score("CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N", 6.1);
 
     // This test only exists in the v3.0 examples.
-    // first.org v3.0 CVE-2014-9253: https://www.first.org/cvss/v3.0/examples#DokuWiki-Reflected-Cross-site-Scripting-Attack-CVE-2014-9253
+    // https://www.first.org/cvss/v3.0/examples#DokuWiki-Reflected-Cross-site-Scripting-Attack-CVE-2014-9253
     assert_v3_base_score("CVSS:3.0/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N", 5.4);
 
     // This was re-scored in CVSS v3.1.
-    // first.org v3.0 CVE-2012-0384: https://www.first.org/cvss/v3.0/examples#Cisco-IOS-Arbitrary-Command-Execution-Vulnerability-CVE-2012-0384
+    // https://www.first.org/cvss/v3.0/examples#Cisco-IOS-Arbitrary-Command-Execution-Vulnerability-CVE-2012-0384
     assert_v3_base_score("CVSS:3.0/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H", 8.8);
 
-    // first.org v3.1 CVE-2013-0375: https://www.first.org/cvss/v3.1/examples#MySQL-Stored-SQL-Injection-CVE-2013-0375
+    // https://www.first.org/cvss/v3.1/examples#MySQL-Stored-SQL-Injection-CVE-2013-0375
     assert_v3_base_score("CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:L/I:L/A:N", 6.4);
 
-    // first.org v3.1 CVE-2014-3566: https://www.first.org/cvss/v3.1/examples#SSLv3-POODLE-Vulnerability-CVE-2014-3566
+    // https://www.first.org/cvss/v3.1/examples#SSLv3-POODLE-Vulnerability-CVE-2014-3566
     assert_v3_base_score("CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N", 3.1);
 
-    // first.org v3.1 CVE-2009-0783: https://www.first.org/cvss/v3.1/examples#Apache-Tomcat-XML-Parser-Vulnerability-CVE-2009-0783
+    // https://www.first.org/cvss/v3.1/examples#Apache-Tomcat-XML-Parser-Vulnerability-CVE-2009-0783
     assert_v3_base_score("CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:L/I:L/A:L", 4.2);
 
     // v3.1 re-scored PR:L -> PR:H, resulting in score 7.2 instead of 8.8.
-    // first.org v3.1 CVE-2012-0384: https://www.first.org/cvss/v3.1/examples#Cisco-IOS-Arbitrary-Command-Execution-Vulnerability-CVE-2012-0384
+    // https://www.first.org/cvss/v3.1/examples#Cisco-IOS-Arbitrary-Command-Execution-Vulnerability-CVE-2012-0384
     assert_v3_base_score("CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H", 7.2);
 
-    // first.org v3.1 CVE-2015-1098: https://www.first.org/cvss/v3.1/examples#Apple-iWork-Denial-of-Service-Vulnerability-CVE-2015-1098
+    // https://www.first.org/cvss/v3.1/examples#Apple-iWork-Denial-of-Service-Vulnerability-CVE-2015-1098
     assert_v3_base_score("CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H", 7.8);
 
-    // first.org v3.1 CVE-2014-0160: https://www.first.org/cvss/v3.1/examples#OpenSSL-Heartbleed-Vulnerability-CVE-2014-0160
+    // https://www.first.org/cvss/v3.1/examples#OpenSSL-Heartbleed-Vulnerability-CVE-2014-0160
     assert_v3_base_score("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N", 7.5);
 
-    // first.org v3.1 CVE-2008-1447: https://www.first.org/cvss/v3.1/examples#DNS-Kaminsky-Bug-CVE-2008-1447
+    // https://www.first.org/cvss/v3.1/examples#DNS-Kaminsky-Bug-CVE-2008-1447
     assert_v3_base_score("CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:N/I:H/A:N", 6.8);
 
-    // first.org v3.1 CVE-2014-2005: https://www.first.org/cvss/v3.1/examples#Sophos-Login-Screen-Bypass-Vulnerability-CVE-2014-2005
+    // https://www.first.org/cvss/v3.1/examples#Sophos-Login-Screen-Bypass-Vulnerability-CVE-2014-2005
     assert_v3_base_score("CVSS:3.1/AV:P/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", 6.8);
 
-    // first.org v3.1 CVE-2010-0467: https://www.first.org/cvss/v3.1/examples#Joomla-Directory-Traversal-Vulnerability-CVE-2010-0467
+    // https://www.first.org/cvss/v3.1/examples#Joomla-Directory-Traversal-Vulnerability-CVE-2010-0467
     assert_v3_base_score("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:N/A:N", 5.8);
 
-    // first.org v3.1 CVE-2012-1342: https://www.first.org/cvss/v3.1/examples#Cisco-Access-Control-Bypass-Vulnerability-CVE-2012-1342
+    // https://www.first.org/cvss/v3.1/examples#Cisco-Access-Control-Bypass-Vulnerability-CVE-2012-1342
     assert_v3_base_score("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:N/I:L/A:N", 5.8);
 
-    // first.org v3.1 CVE-2013-6014: https://www.first.org/cvss/v3.1/examples#Juniper-Proxy-ARP-Denial-of-Service-Vulnerability-CVE-2013-6014
+    // https://www.first.org/cvss/v3.1/examples#Juniper-Proxy-ARP-Denial-of-Service-Vulnerability-CVE-2013-6014
     assert_v3_base_score("CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:H", 9.3);
 
-    // first.org v3.1 CVE-2011-1265: https://www.first.org/cvss/v3.1/examples#Microsoft-Windows-Bluetooth-Remote-Code-Execution-Vulnerability-CVE-2011-1265
+    // https://www.first.org/cvss/v3.1/examples#Microsoft-Windows-Bluetooth-Remote-Code-Execution-Vulnerability-CVE-2011-1265
     assert_v3_base_score("CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H", 8.8);
 
-    // first.org v3.1 CVE-2014-2019: https://www.first.org/cvss/v3.1/examples#Apple-iOS-Security-Control-Bypass-Vulnerability-CVE-2014-2019
+    // https://www.first.org/cvss/v3.1/examples#Apple-iOS-Security-Control-Bypass-Vulnerability-CVE-2014-2019
     assert_v3_base_score("CVSS:3.1/AV:P/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N", 4.6);
 
-    // first.org v3.1 CVE-2015-0970: https://www.first.org/cvss/v3.1/examples#SearchBlox-Cross-Site-Request-Forgery-Vulnerability-CVE-2015-0970
+    // https://www.first.org/cvss/v3.1/examples#SearchBlox-Cross-Site-Request-Forgery-Vulnerability-CVE-2015-0970
     assert_v3_base_score("CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H", 8.8);
 
-    // first.org v3.1 CVE-2014-0224: https://www.first.org/cvss/v3.1/examples#SSL-TLS-MITM-Vulnerability-CVE-2014-0224
+    // https://www.first.org/cvss/v3.1/examples#SSL-TLS-MITM-Vulnerability-CVE-2014-0224
     assert_v3_base_score("CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N", 7.4);
 
-    // first.org v3.1 CVE-2012-5376: https://www.first.org/cvss/v3.1/examples#Google-Chrome-Sandbox-Bypass-vulnerability-CVE-2012-5376
+    // https://www.first.org/cvss/v3.1/examples#Google-Chrome-Sandbox-Bypass-vulnerability-CVE-2012-5376
     assert_v3_base_score("CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H", 9.6);
 
-    // first.org v3.1 CVE-2016-0128: https://www.first.org/cvss/v3.1/examples#SAMR-LSAD-Privilege-Escalation-via-Protocol-Downgrade-Vulnerability-Badlock-CVE-2016-0128-and-CVE-2016-2118
+    // https://www.first.org/cvss/v3.1/examples#SAMR-LSAD-Privilege-Escalation-via-Protocol-Downgrade-Vulnerability-Badlock-CVE-2016-0128-and-CVE-2016-2118
     assert_v3_base_score("CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:N", 6.8);
 
-    // first.org v3.1 CVE-2016-2118: https://www.first.org/cvss/v3.1/examples#SAMR-LSAD-Privilege-Escalation-via-Protocol-Downgrade-Vulnerability-Badlock-CVE-2016-0128-and-CVE-2016-2118
+    // https://www.first.org/cvss/v3.1/examples#SAMR-LSAD-Privilege-Escalation-via-Protocol-Downgrade-Vulnerability-Badlock-CVE-2016-0128-and-CVE-2016-2118
     assert_v3_base_score("CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H", 7.5);
 
-    // first.org v3.1 CVE-2019-7551: https://www.first.org/cvss/v3.1/examples#Cantemo-Portal-Stored-Cross-site-Scripting-Vulnerability-CVE-2019-7551
+    // https://www.first.org/cvss/v3.1/examples#Cantemo-Portal-Stored-Cross-site-Scripting-Vulnerability-CVE-2019-7551
     assert_v3_base_score("CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:H/I:H/A:H", 9.0);
 
-    // first.org v3.1 CVE-2017-5942: https://www.first.org/cvss/v3.1/examples#WordPress-Mail-Plugin-Reflected-Cross-site-Scripting-Vulnerability-CVE-2017-5942
+    // https://www.first.org/cvss/v3.1/examples#WordPress-Mail-Plugin-Reflected-Cross-site-Scripting-Vulnerability-CVE-2017-5942
     assert_v3_base_score("CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N", 6.1);
 
-    // first.org v3.1 CVE-2016-5558: https://www.first.org/cvss/v3.1/examples#Remote-Code-Execution-in-Oracle-Outside-in-Technology-CVE-2016-5558
+    // https://www.first.org/cvss/v3.1/examples#Remote-Code-Execution-in-Oracle-Outside-in-Technology-CVE-2016-5558
     assert_v3_base_score("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:L", 8.6);
 
-    // first.org v3.1 CVE-2016-5729: https://www.first.org/cvss/v3.1/examples#Lenovo-ThinkPwn-Exploit-CVE-2016-5729
+    // https://www.first.org/cvss/v3.1/examples#Lenovo-ThinkPwn-Exploit-CVE-2016-5729
     assert_v3_base_score("CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H", 8.2);
 
-    // first.org v3.1 CVE-2015-2890: https://www.first.org/cvss/v3.1/examples#Failure-to-Lock-Flash-on-Resume-from-sleep-CVE-2015-2890
+    // https://www.first.org/cvss/v3.1/examples#Failure-to-Lock-Flash-on-Resume-from-sleep-CVE-2015-2890
     assert_v3_base_score("CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:H/A:H", 6.0);
 
-    // first.org v3.1 CVE-2018-3652: https://www.first.org/cvss/v3.1/examples#Intel-DCI-Issue-CVE-2018-3652
+    // https://www.first.org/cvss/v3.1/examples#Intel-DCI-Issue-CVE-2018-3652
     assert_v3_base_score("CVSS:3.1/AV:P/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H", 7.6);
 
-    // first.org v3.1 CVE-2019-0884 on Microsoft Edge: https://www.first.org/cvss/v3.1/examples#Scripting-Engine-Memory-Corruption-Vulnerability-CVE-2019-0884
+    // https://www.first.org/cvss/v3.1/examples#Scripting-Engine-Memory-Corruption-Vulnerability-CVE-2019-0884
     assert_v3_base_score("CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:L/A:N", 4.2);
 }
