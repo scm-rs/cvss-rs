@@ -18,8 +18,8 @@ fn assert_v3_scores(
     expected_temporal: Option<f64>,
     expected_environmental: Option<f64>,
 ) {
-    let cvss =
-        CvssV3::from_str(vector).expect(&format!("Failed to parse CVSS v3 vector: {}", vector));
+    let cvss = CvssV3::from_str(vector)
+        .unwrap_or_else(|_| panic!("Failed to parse CVSS v3 vector: {}", vector));
 
     let calculated_base = cvss
         .calculated_base_score()
