@@ -2,7 +2,7 @@
 name = "cvss-rs"
 version = "0.3.0"
 edition = "2021"
-rust-version = "1.80"
+rust-version = "1.85"
 description = "A Rust library for representing and deserializing CVSS (Common Vulnerability Scoring System) data."
 license = "Apache-2.0"
 repository = "https://github.com/scm-rs/cvss-rs"
