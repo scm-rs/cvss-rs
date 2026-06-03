@@ -27,7 +27,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-cvss-rs = "0.2"
+cvss-rs = "0.3"
 ```
 
 ## Usage
