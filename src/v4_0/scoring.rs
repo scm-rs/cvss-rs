@@ -1,7 +1,7 @@
 //! CVSS v4.0 scoring algorithm implementation.
 //!
 //! Implements the MacroVector-based scoring algorithm as specified in:
-//! https://www.first.org/cvss/v4.0/specification-document
+//! <https://www.first.org/cvss/v4.0/specification-document>
 
 use super::*;
 use crate::v4_0::lookup::lookup_global;

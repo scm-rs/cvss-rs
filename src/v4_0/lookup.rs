@@ -1,7 +1,7 @@
 //! Lookup tables for CVSS v4.0 MacroVector scoring.
 //!
 //! Based on the official CVSS v4.0 specification and calculator:
-//! https://github.com/FIRSTdotorg/cvss-v4-calculator
+//! <https://github.com/FIRSTdotorg/cvss-v4-calculator>
 
 use super::scoring::{MacroVector, VectorEq};
 
