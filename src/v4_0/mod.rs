@@ -542,7 +542,7 @@ impl CvssV4 {
     /// Returns None if required base metrics are missing.
     ///
     /// This uses the CVSS v4.0 MacroVector-based scoring algorithm as specified in:
-    /// https://www.first.org/cvss/v4.0/specification-document
+    /// <https://www.first.org/cvss/v4.0/specification-document>
     ///
     /// The score is rounded to one decimal place as required by the specification.
     ///
