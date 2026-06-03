@@ -125,6 +125,15 @@ impl AttackVector {
             AttackVector::NotDefined => 0.85, // Defaults to worst case (Network)
         }
     }
+
+    /// Returns `Some(self)` unless this metric is `NotDefined`.
+    pub fn as_defined(&self) -> Option<&Self> {
+        if matches!(self, Self::NotDefined) {
+            None
+        } else {
+            Some(self)
+        }
+    }
 }
 
 /// Represents the attack complexity metric.
@@ -146,6 +155,15 @@ impl AttackComplexity {
             AttackComplexity::Low => 0.77,
             AttackComplexity::High => 0.44,
             AttackComplexity::NotDefined => 0.77, // Defaults to worst case (Low)
+        }
+    }
+
+    /// Returns `Some(self)` unless this metric is `NotDefined`.
+    pub fn as_defined(&self) -> Option<&Self> {
+        if matches!(self, Self::NotDefined) {
+            None
+        } else {
+            Some(self)
         }
     }
 }
@@ -187,6 +205,15 @@ impl PrivilegesRequired {
             PrivilegesRequired::NotDefined => 0.85, // Defaults to worst case (None)
         }
     }
+
+    /// Returns `Some(self)` unless this metric is `NotDefined`.
+    pub fn as_defined(&self) -> Option<&Self> {
+        if matches!(self, Self::NotDefined) {
+            None
+        } else {
+            Some(self)
+        }
+    }
 }
 
 /// Represents the user interaction metric.
@@ -210,6 +237,15 @@ impl UserInteraction {
             UserInteraction::NotDefined => 0.85, // Defaults to worst case (None)
         }
     }
+
+    /// Returns `Some(self)` unless this metric is `NotDefined`.
+    pub fn as_defined(&self) -> Option<&Self> {
+        if matches!(self, Self::NotDefined) {
+            None
+        } else {
+            Some(self)
+        }
+    }
 }
 
 /// Represents the scope metric.
@@ -228,6 +264,15 @@ impl Scope {
     /// Returns whether the scope is changed (for use in score calculation).
     pub fn is_changed(&self) -> bool {
         matches!(self, Scope::Changed)
+    }
+
+    /// Returns `Some(self)` unless this metric is `NotDefined`.
+    pub fn as_defined(&self) -> Option<&Self> {
+        if matches!(self, Self::NotDefined) {
+            None
+        } else {
+            Some(self)
+        }
     }
 }
 
@@ -253,6 +298,15 @@ impl Impact {
             Impact::Low => 0.22,
             Impact::None => 0.0,
             Impact::NotDefined => 0.56, // Defaults to worst case (High)
+        }
+    }
+
+    /// Returns `Some(self)` unless this metric is `NotDefined`.
+    pub fn as_defined(&self) -> Option<&Self> {
+        if matches!(self, Self::NotDefined) {
+            None
+        } else {
+            Some(self)
         }
     }
 }
@@ -365,66 +419,6 @@ impl SecurityRequirement {
             SecurityRequirement::NotDefined => 1.0,
         }
     }
-}
-
-/// A trait for modified base metrics (which can be `NotDefined`)
-/// Used to generically fall back to a base metric when the modified metric is `NotDefined`.
-trait ModifiedBaseMetric {
-    fn is_not_defined(&self) -> bool;
-}
-
-/// Implements `ModifiedBaseMetric` for modified base metrics.
-macro_rules! impl_is_not_defined {
-    ($($t:ty),+ $(,)?) => {
-        $(impl ModifiedBaseMetric for $t {
-            fn is_not_defined(&self) -> bool { matches!(self, <$t>::NotDefined) }
-        })+
-    };
-}
-
-impl_is_not_defined!(
-    AttackVector,
-    AttackComplexity,
-    PrivilegesRequired,
-    UserInteraction,
-    Scope,
-    Impact,
-);
-
-/// Returns the modified metric value if present and not `NotDefined`, otherwise falls back to the base value.
-fn modified_or_base<'a, T: ModifiedBaseMetric>(modified: &'a Option<T>, base: &'a T) -> &'a T {
-    modified
-        .as_ref()
-        .filter(|v| !v.is_not_defined())
-        .unwrap_or(base)
-}
-
-/// A trait for metrics that should fall back to a default score of 1.0 if not present
-trait MetricWithFallbackDefault {
-    fn score(&self) -> f64;
-}
-
-/// Implements `MetricWithFallbackDefault` for types with a `score()` method.
-macro_rules! impl_has_default_score {
-    ($($t:ty),+ $(,)?) => {
-        $(impl MetricWithFallbackDefault for $t {
-            fn score(&self) -> f64 {
-                <$t>::score(self)
-            }
-        })+
-    };
-}
-
-impl_has_default_score!(
-    ExploitCodeMaturity,
-    RemediationLevel,
-    ReportConfidence,
-    SecurityRequirement,
-);
-
-/// Returns the score of an optional metric, defaulting to 1.0 if not present.
-fn score_or_default<T: MetricWithFallbackDefault>(metric: &Option<T>) -> f64 {
-    metric.as_ref().map(|m| m.score()).unwrap_or(1.0)
 }
 
 /// Rounds up to 1 decimal place as per CVSS v3 specification.
@@ -551,9 +545,12 @@ impl CvssV3 {
         let base_score = self.calculated_base_score()?;
 
         // Temporal metrics default to 1.0 (NotDefined) if not present
-        let e = score_or_default(&self.exploit_code_maturity);
-        let rl = score_or_default(&self.remediation_level);
-        let rc = score_or_default(&self.report_confidence);
+        let e = self
+            .exploit_code_maturity
+            .as_ref()
+            .map_or(1.0, |m| m.score());
+        let rl = self.remediation_level.as_ref().map_or(1.0, |m| m.score());
+        let rc = self.report_confidence.as_ref().map_or(1.0, |m| m.score());
 
         // Calculate temporal score
         Some(roundup(base_score * e * rl * rc))
@@ -597,19 +594,60 @@ impl CvssV3 {
         let a = self.availability_impact.as_ref()?;
 
         // Modified metrics: if not present or set to NotDefined (X), fall back to base metric
-        let mav = modified_or_base(&self.modified_attack_vector, av);
-        let mac = modified_or_base(&self.modified_attack_complexity, ac);
-        let mpr = modified_or_base(&self.modified_privileges_required, pr);
-        let mui = modified_or_base(&self.modified_user_interaction, ui);
-        let ms = modified_or_base(&self.modified_scope, scope);
-        let mc = modified_or_base(&self.modified_confidentiality_impact, c);
-        let mi = modified_or_base(&self.modified_integrity_impact, i);
-        let ma = modified_or_base(&self.modified_availability_impact, a);
+        let mav = self
+            .modified_attack_vector
+            .as_ref()
+            .and_then(AttackVector::as_defined)
+            .unwrap_or(av);
+        let mac = self
+            .modified_attack_complexity
+            .as_ref()
+            .and_then(AttackComplexity::as_defined)
+            .unwrap_or(ac);
+        let mpr = self
+            .modified_privileges_required
+            .as_ref()
+            .and_then(PrivilegesRequired::as_defined)
+            .unwrap_or(pr);
+        let mui = self
+            .modified_user_interaction
+            .as_ref()
+            .and_then(UserInteraction::as_defined)
+            .unwrap_or(ui);
+        let ms = self
+            .modified_scope
+            .as_ref()
+            .and_then(Scope::as_defined)
+            .unwrap_or(scope);
+        let mc = self
+            .modified_confidentiality_impact
+            .as_ref()
+            .and_then(Impact::as_defined)
+            .unwrap_or(c);
+        let mi = self
+            .modified_integrity_impact
+            .as_ref()
+            .and_then(Impact::as_defined)
+            .unwrap_or(i);
+        let ma = self
+            .modified_availability_impact
+            .as_ref()
+            .and_then(Impact::as_defined)
+            .unwrap_or(a);
 
         // Security requirements default to 1.0 (Medium/NotDefined)
-        let cr = score_or_default(&self.confidentiality_requirement);
-        let ir = score_or_default(&self.integrity_requirement);
-        let ar = score_or_default(&self.availability_requirement);
+        let cr = self
+            .confidentiality_requirement
+            .as_ref()
+            .map_or(1.0, |m| m.score());
+        let ir = self
+            .integrity_requirement
+            .as_ref()
+            .map_or(1.0, |m| m.score());
+        let ar = self
+            .availability_requirement
+            .as_ref()
+            .map_or(1.0, |m| m.score());
 
         let scope_changed = ms.is_changed();
 
@@ -645,9 +683,12 @@ impl CvssV3 {
             0.0
         } else {
             // Temporal metrics for environmental calculation
-            let e = score_or_default(&self.exploit_code_maturity);
-            let rl = score_or_default(&self.remediation_level);
-            let rc = score_or_default(&self.report_confidence);
+            let e = self
+                .exploit_code_maturity
+                .as_ref()
+                .map_or(1.0, |m| m.score());
+            let rl = self.remediation_level.as_ref().map_or(1.0, |m| m.score());
+            let rc = self.report_confidence.as_ref().map_or(1.0, |m| m.score());
 
             if scope_changed {
                 roundup(roundup(f64::min(1.08 * (m_exploitability + m_impact), 10.0)) * e * rl * rc)
