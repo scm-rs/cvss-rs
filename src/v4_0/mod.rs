@@ -506,6 +506,7 @@ pub enum VulnerabilityResponseEffort {
 /// Provider Urgency (U).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, EnumString, Display)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[strum(ascii_case_insensitive)]
 pub enum ProviderUrgency {
     #[strum(serialize = "Clear")]
     Clear,

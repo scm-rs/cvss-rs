@@ -92,3 +92,14 @@ fn test_v4_0_all_metrics_not_defined() {
     // and requirements as High produces 8.6
     assert_eq!(score, 8.6);
 }
+
+#[test]
+fn test_v4_0_provider_urgency_values() {
+    // Test that ProviderUrgency values parse correctly despite the parser uppercasing values.
+    // The spec defines these as mixed-case: Clear, Green, Amber, Red.
+    let base = "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:H/VI:H/VA:H/SC:L/SI:L/SA:L";
+    for urgency in &["Clear", "Green", "Amber", "Red", "X"] {
+        let vector = format!("{base}/U:{urgency}");
+        CvssV4::from_str(&vector).unwrap_or_else(|e| panic!("Should parse U:{urgency}: {e}"));
+    }
+}
