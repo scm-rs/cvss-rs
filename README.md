@@ -23,11 +23,10 @@
 
 ## Installation
 
-Add this to your `Cargo.toml`:
+Run the following command:
 
-```toml
-[dependencies]
-cvss-rs = "0.3"
+```sh  
+cargo add cvss-rs
 ```
 
 ## Usage
