@@ -125,6 +125,15 @@ impl AttackVector {
             AttackVector::NotDefined => 0.85, // Defaults to worst case (Network)
         }
     }
+
+    /// Returns `Some(self)` unless this metric is `NotDefined`.
+    pub fn as_defined(&self) -> Option<&Self> {
+        if matches!(self, Self::NotDefined) {
+            None
+        } else {
+            Some(self)
+        }
+    }
 }
 
 /// Represents the attack complexity metric.
@@ -146,6 +155,15 @@ impl AttackComplexity {
             AttackComplexity::Low => 0.77,
             AttackComplexity::High => 0.44,
             AttackComplexity::NotDefined => 0.77, // Defaults to worst case (Low)
+        }
+    }
+
+    /// Returns `Some(self)` unless this metric is `NotDefined`.
+    pub fn as_defined(&self) -> Option<&Self> {
+        if matches!(self, Self::NotDefined) {
+            None
+        } else {
+            Some(self)
         }
     }
 }
@@ -187,6 +205,15 @@ impl PrivilegesRequired {
             PrivilegesRequired::NotDefined => 0.85, // Defaults to worst case (None)
         }
     }
+
+    /// Returns `Some(self)` unless this metric is `NotDefined`.
+    pub fn as_defined(&self) -> Option<&Self> {
+        if matches!(self, Self::NotDefined) {
+            None
+        } else {
+            Some(self)
+        }
+    }
 }
 
 /// Represents the user interaction metric.
@@ -210,6 +237,15 @@ impl UserInteraction {
             UserInteraction::NotDefined => 0.85, // Defaults to worst case (None)
         }
     }
+
+    /// Returns `Some(self)` unless this metric is `NotDefined`.
+    pub fn as_defined(&self) -> Option<&Self> {
+        if matches!(self, Self::NotDefined) {
+            None
+        } else {
+            Some(self)
+        }
+    }
 }
 
 /// Represents the scope metric.
@@ -228,6 +264,15 @@ impl Scope {
     /// Returns whether the scope is changed (for use in score calculation).
     pub fn is_changed(&self) -> bool {
         matches!(self, Scope::Changed)
+    }
+
+    /// Returns `Some(self)` unless this metric is `NotDefined`.
+    pub fn as_defined(&self) -> Option<&Self> {
+        if matches!(self, Self::NotDefined) {
+            None
+        } else {
+            Some(self)
+        }
     }
 }
 
@@ -253,6 +298,15 @@ impl Impact {
             Impact::Low => 0.22,
             Impact::None => 0.0,
             Impact::NotDefined => 0.56, // Defaults to worst case (High)
+        }
+    }
+
+    /// Returns `Some(self)` unless this metric is `NotDefined`.
+    pub fn as_defined(&self) -> Option<&Self> {
+        if matches!(self, Self::NotDefined) {
+            None
+        } else {
+            Some(self)
         }
     }
 }
@@ -367,6 +421,24 @@ impl SecurityRequirement {
     }
 }
 
+/// Rounds up to 1 decimal place as per CVSS v3 specification.
+///
+/// Per the CVSS v3 spec, to avoid floating point precision issues,
+/// the input is first multiplied by 100,000 and rounded to the nearest integer.
+/// This ensures consistent rounding across different implementations.
+fn roundup(input: f64) -> f64 {
+    // Handle floating point precision by normalizing to integer first
+    let int_input = (input * 100000.0).round() as i64;
+    if int_input % 10000 == 0 {
+        // If the last 4 digits are zero, return the value as is
+        int_input as f64 / 100000.0
+    } else {
+        // Integer division in Rust truncates toward zero, which is equivalent
+        // to floor for non-negative values (and scores are always >= 0).
+        (int_input / 10000 + 1) as f64 / 10.0
+    }
+}
+
 impl CvssV3 {
     pub fn vector_string(&self) -> &str {
         &self.vector_string
@@ -387,7 +459,26 @@ impl CvssV3 {
     }
 
     /// Calculates the base score from the base metrics.
-    /// Returns None if required base metrics are missing.
+    ///
+    /// Required base metrics are:
+    /// - Attack Vector
+    /// - Attack Complexity
+    /// - Privileges Required
+    /// - User Interaction
+    /// - Scope
+    /// - Confidentiality Impact
+    /// - Integrity Impact
+    /// - Availability Impact
+    ///
+    /// There is no difference in the base score calculation between CVSS v3.0 and v3.1.
+    ///
+    /// Further information can be found in the
+    /// [CVSS v3.1 specification Base Equation](https://www.first.org/cvss/v3.1/specification-document#7-1-Base-Metrics-Equations)
+    ///
+    /// # Returns
+    ///
+    /// - `Some(base_score)` if all required base metrics are present
+    /// - `None` if any of the required base metrics are missing
     pub fn calculated_base_score(&self) -> Option<f64> {
         // All base metrics are required
         let av = self.attack_vector.as_ref()?;
@@ -401,62 +492,98 @@ impl CvssV3 {
 
         let scope_changed = scope.is_changed();
 
+        // Calculate ISS (Impact Sub Score)
+        let iss = 1.0 - ((1.0 - c.score()) * (1.0 - i.score()) * (1.0 - a.score()));
+
+        // Calculate impact
+        let impact = if scope_changed {
+            7.52 * (iss - 0.029) - 3.25 * (iss - 0.02).powf(15.0)
+        } else {
+            6.42 * iss
+        };
+
         // Calculate exploitability sub-score
         let exploitability = 8.22 * av.score() * ac.score() * pr.score(scope_changed) * ui.score();
 
-        // Calculate impact sub-score
-        let impact_sub = 1.0 - ((1.0 - c.score()) * (1.0 - i.score()) * (1.0 - a.score()));
-
-        // Calculate ISS (Impact Sub Score)
-        // Base score formula is the same for v3.0 and v3.1
-        let iss = if scope_changed {
-            7.52 * (impact_sub - 0.029) - 3.25 * (impact_sub - 0.02).powf(15.0)
-        } else {
-            6.42 * impact_sub
-        };
-
         // Calculate base score
-        let score = if iss <= 0.0 {
+        let score = if impact <= 0.0 {
             0.0
         } else if scope_changed {
-            Self::roundup(f64::min(1.08 * (exploitability + iss), 10.0))
+            roundup(f64::min(1.08 * (impact + exploitability), 10.0))
         } else {
-            Self::roundup(f64::min(exploitability + iss, 10.0))
+            roundup(f64::min(impact + exploitability, 10.0))
         };
 
         Some(score)
     }
 
-    /// Calculates the temporal score from base and temporal metrics.
-    /// Returns None if required metrics are missing.
+    /// Calculates the temporal score from base metrics and temporal metrics.
+    ///
+    /// Required base metrics are:
+    /// - Attack Vector
+    /// - Attack Complexity
+    /// - Privileges Required
+    /// - User Interaction
+    /// - Scope
+    /// - Confidentiality Impact
+    /// - Integrity Impact
+    /// - Availability Impact
+    ///
+    /// Temporal metrics are optional and default to 1.0 (NotDefined) if not present.
+    ///
+    /// There is no difference in the temporal score calculation between CVSS v3.0 and v3.1.
+    ///
+    /// Further information can be found in the
+    /// [CVSS v3.1 specification Temporal Equation](https://www.first.org/cvss/v3.1/specification-document#7-2-Temporal-Metrics-Equations)
+    ///
+    /// # Returns
+    ///
+    /// - `Some(temporal_score)` if all required base metrics are present
+    /// - `None` if any of the required base metrics are missing
     pub fn calculated_temporal_score(&self) -> Option<f64> {
+        // Calculate base score
         let base_score = self.calculated_base_score()?;
 
         // Temporal metrics default to 1.0 (NotDefined) if not present
         let e = self
             .exploit_code_maturity
             .as_ref()
-            .map(|m| m.score())
-            .unwrap_or(1.0);
-        let rl = self
-            .remediation_level
-            .as_ref()
-            .map(|m| m.score())
-            .unwrap_or(1.0);
-        let rc = self
-            .report_confidence
-            .as_ref()
-            .map(|m| m.score())
-            .unwrap_or(1.0);
+            .map_or(1.0, |m| m.score());
+        let rl = self.remediation_level.as_ref().map_or(1.0, |m| m.score());
+        let rc = self.report_confidence.as_ref().map_or(1.0, |m| m.score());
 
-        let score = Self::roundup(base_score * e * rl * rc);
-        Some(score)
+        // Calculate temporal score
+        Some(roundup(base_score * e * rl * rc))
     }
 
-    /// Calculates the environmental score from base, temporal, and environmental metrics.
-    /// Returns None if required base metrics are missing.
+    /// Calculates the environmental score from base metrics, temporal metrics, and environmental metrics.
+    ///
+    /// Required base metrics are:
+    /// - Attack Vector
+    /// - Attack Complexity
+    /// - Privileges Required
+    /// - User Interaction
+    /// - Scope
+    /// - Confidentiality Impact
+    /// - Integrity Impact
+    /// - Availability Impact
+    ///
+    /// Temporal metrics are optional and default to 1.0 (NotDefined) if not present.
+    /// Modified base metrics are optional and default to the corresponding base metric if not present or set to NotDefined.
+    /// Security requirement metrics are optional and default to 1.0 (NotDefined) if not present.
+    ///
+    /// The modified impact formula used in the environmental score differs between CVSS v3.0 and v3.1.
+    ///
+    /// Further information can be found in the
+    /// [CVSS v3.1 specification Environmental Equation](https://www.first.org/cvss/v3.1/specification-document#7-3-Environmental-Metrics-Equations) and the
+    /// [CVSS v3.0 specification Environmental Equation](https://www.first.org/cvss/v3.0/specification-document#8-3-Environmental)
+    ///
+    /// # Returns
+    ///
+    /// - `Some(environmental_score)` if all required base metrics are present
+    /// - `None` if any of the required base metrics are missing
     pub fn calculated_environmental_score(&self) -> Option<f64> {
-        // Get base metrics (required)
+        // Get required base metrics
         let av = self.attack_vector.as_ref()?;
         let ac = self.attack_complexity.as_ref()?;
         let pr = self.privileges_required.as_ref()?;
@@ -470,60 +597,57 @@ impl CvssV3 {
         let mav = self
             .modified_attack_vector
             .as_ref()
-            .filter(|v| !matches!(v, AttackVector::NotDefined))
+            .and_then(AttackVector::as_defined)
             .unwrap_or(av);
         let mac = self
             .modified_attack_complexity
             .as_ref()
-            .filter(|v| !matches!(v, AttackComplexity::NotDefined))
+            .and_then(AttackComplexity::as_defined)
             .unwrap_or(ac);
         let mpr = self
             .modified_privileges_required
             .as_ref()
-            .filter(|v| !matches!(v, PrivilegesRequired::NotDefined))
+            .and_then(PrivilegesRequired::as_defined)
             .unwrap_or(pr);
         let mui = self
             .modified_user_interaction
             .as_ref()
-            .filter(|v| !matches!(v, UserInteraction::NotDefined))
+            .and_then(UserInteraction::as_defined)
             .unwrap_or(ui);
         let ms = self
             .modified_scope
             .as_ref()
-            .filter(|v| !matches!(v, Scope::NotDefined))
+            .and_then(Scope::as_defined)
             .unwrap_or(scope);
         let mc = self
             .modified_confidentiality_impact
             .as_ref()
-            .filter(|v| !matches!(v, Impact::NotDefined))
+            .and_then(Impact::as_defined)
             .unwrap_or(c);
         let mi = self
             .modified_integrity_impact
             .as_ref()
-            .filter(|v| !matches!(v, Impact::NotDefined))
+            .and_then(Impact::as_defined)
             .unwrap_or(i);
         let ma = self
             .modified_availability_impact
             .as_ref()
-            .filter(|v| !matches!(v, Impact::NotDefined))
+            .and_then(Impact::as_defined)
             .unwrap_or(a);
 
         // Security requirements default to 1.0 (Medium/NotDefined)
         let cr = self
             .confidentiality_requirement
             .as_ref()
-            .map(|r| r.score())
-            .unwrap_or(1.0);
+            .map_or(1.0, |m| m.score());
         let ir = self
             .integrity_requirement
             .as_ref()
-            .map(|r| r.score())
-            .unwrap_or(1.0);
+            .map_or(1.0, |m| m.score());
         let ar = self
             .availability_requirement
             .as_ref()
-            .map(|r| r.score())
-            .unwrap_or(1.0);
+            .map_or(1.0, |m| m.score());
 
         let scope_changed = ms.is_changed();
 
@@ -531,72 +655,49 @@ impl CvssV3 {
         let m_exploitability =
             8.22 * mav.score() * mac.score() * mpr.score(scope_changed) * mui.score();
 
-        // Calculate modified impact
-        let m_impact_sub = f64::min(
+        // Calculate modified ISS
+        let m_iss = f64::min(
             1.0 - ((1.0 - cr * mc.score()) * (1.0 - ir * mi.score()) * (1.0 - ar * ma.score())),
             0.915,
         );
 
-        // Calculate modified ISS
+        // Calculate modified impact
         // CVSS v3.1 uses a different formula than v3.0
-        let m_iss = if scope_changed {
+        let m_impact = if scope_changed {
             match self.version {
                 Some(VersionV3::V3_1) => {
                     // v3.1: 7.52 × (MISS - 0.029) - 3.25 × (MISS × 0.9731 - 0.02)^13
-                    7.52 * (m_impact_sub - 0.029) - 3.25 * (m_impact_sub * 0.9731 - 0.02).powf(13.0)
+                    7.52 * (m_iss - 0.029) - 3.25 * (m_iss * 0.9731 - 0.02).powf(13.0)
                 }
                 _ => {
                     // v3.0: 7.52 × (MISS - 0.029) - 3.25 × (MISS - 0.02)^15
-                    7.52 * (m_impact_sub - 0.029) - 3.25 * (m_impact_sub - 0.02).powf(15.0)
+                    7.52 * (m_iss - 0.029) - 3.25 * (m_iss - 0.02).powf(15.0)
                 }
             }
         } else {
-            6.42 * m_impact_sub
+            6.42 * m_iss
         };
 
         // Calculate environmental score
-        let score = if m_iss <= 0.0 {
+        let score = if m_impact <= 0.0 {
             0.0
         } else {
             // Temporal metrics for environmental calculation
             let e = self
                 .exploit_code_maturity
                 .as_ref()
-                .map(|m| m.score())
-                .unwrap_or(1.0);
-            let rl = self
-                .remediation_level
-                .as_ref()
-                .map(|m| m.score())
-                .unwrap_or(1.0);
-            let rc = self
-                .report_confidence
-                .as_ref()
-                .map(|m| m.score())
-                .unwrap_or(1.0);
+                .map_or(1.0, |m| m.score());
+            let rl = self.remediation_level.as_ref().map_or(1.0, |m| m.score());
+            let rc = self.report_confidence.as_ref().map_or(1.0, |m| m.score());
 
             if scope_changed {
-                Self::roundup(
-                    Self::roundup(f64::min(1.08 * (m_exploitability + m_iss), 10.0)) * e * rl * rc,
-                )
+                roundup(roundup(f64::min(1.08 * (m_exploitability + m_impact), 10.0)) * e * rl * rc)
             } else {
-                Self::roundup(Self::roundup(f64::min(m_exploitability + m_iss, 10.0)) * e * rl * rc)
+                roundup(roundup(f64::min(m_exploitability + m_impact, 10.0)) * e * rl * rc)
             }
         };
 
         Some(score)
-    }
-
-    /// Rounds up to 1 decimal place as per CVSS v3 specification.
-    ///
-    /// Per the CVSS v3 spec, to avoid floating point precision issues,
-    /// the input is first multiplied by 100,000 and rounded to the nearest integer.
-    /// This ensures consistent rounding across different implementations.
-    fn roundup(value: f64) -> f64 {
-        // Handle floating point precision by normalizing to integer first
-        let int_input = (value * 100000.0).round() as i64;
-        let normalized = int_input as f64 / 100000.0;
-        (normalized * 10.0).ceil() / 10.0
     }
 }
 
