@@ -51,6 +51,9 @@ pub mod v3;
 pub mod v4_0;
 pub mod version;
 
+// Re-export for API stability
+pub use error::ParseError;
+
 /// An enum to hold any version of a CVSS object.
 #[derive(Debug, Deserialize, EnumDiscriminants)]
 #[serde(tag = "version")]
