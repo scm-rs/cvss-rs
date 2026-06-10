@@ -5,7 +5,8 @@ use std::fmt;
 use std::str::FromStr;
 use strum::{Display, EnumString};
 
-use crate::{ParseError, Severity as UnifiedSeverity};
+use crate::error::ParseError;
+use crate::Severity as UnifiedSeverity;
 
 /// Represents a CVSS v2.0 score object.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
