@@ -5,7 +5,10 @@ use std::fmt;
 use std::str::FromStr;
 use strum::{Display, EnumString};
 
-use crate::{version::VersionV3, ParseError, Severity as UnifiedSeverity};
+use crate::utils::prefix;
+use crate::version::VersionV3;
+use crate::Version;
+use crate::{ParseError, Severity as UnifiedSeverity};
 
 /// Represents a CVSS v3.0 or v3.1 score object.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -603,40 +606,17 @@ impl FromStr for CvssV3 {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut components = s.split('/');
+        // extract and validate version prefix
+        let (version, components_str) = prefix::extract_version_from_required_prefix(s)?;
 
-        // Parse version prefix (e.g., "CVSS:3.1")
-        let version_component = components.next().ok_or_else(|| ParseError::InvalidPrefix {
-            found: String::new(),
-        })?;
+        // validate that the prefix version is either 3.0 or 3.1
+        prefix::validate_allowed_prefix_version(&version, &[Version::V3_0, Version::V3_1])?;
 
-        let mut version_parts = version_component.split(':');
-        let prefix = version_parts
-            .next()
-            .ok_or_else(|| ParseError::InvalidPrefix {
-                found: version_component.to_string(),
-            })?;
-
-        if !prefix.eq_ignore_ascii_case("CVSS") {
-            return Err(ParseError::InvalidPrefix {
-                found: prefix.to_string(),
-            });
-        }
-
-        let version_str = version_parts
-            .next()
-            .ok_or_else(|| ParseError::InvalidVersion {
-                version: version_component.to_string(),
-            })?;
-
-        let parsed_version = match version_str {
-            "3.0" => VersionV3::V3_0,
-            "3.1" => VersionV3::V3_1,
-            _ => {
-                return Err(ParseError::InvalidVersion {
-                    version: version_str.to_string(),
-                })
-            }
+        // map to tightened version enum
+        let parsed_version = match version {
+            Version::V3_0 => VersionV3::V3_0,
+            Version::V3_1 => VersionV3::V3_1,
+            _ => unreachable!("validated above"),
         };
 
         // Initialize a CvssV3 with empty fields
@@ -674,7 +654,7 @@ impl FromStr for CvssV3 {
         };
 
         // Parse metrics
-        for component in components {
+        for component in components_str.split('/') {
             if component.is_empty() {
                 continue;
             }

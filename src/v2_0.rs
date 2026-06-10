@@ -5,6 +5,8 @@ use std::fmt;
 use std::str::FromStr;
 use strum::{Display, EnumString};
 
+use crate::utils::prefix;
+use crate::Version;
 use crate::{ParseError, Severity as UnifiedSeverity};
 
 /// Represents a CVSS v2.0 score object.
@@ -552,16 +554,13 @@ impl FromStr for CvssV2 {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let components_str = s;
+        // try to extract version prefix and extract components
+        let (version_opt, components_str) = prefix::extract_version_from_optional_prefix(s)?;
 
-        // CVSS v2 vectors may or may not have "CVSS:2.0/" prefix
-        // Examples: "AV:N/AC:L/Au:N/C:C/I:C/A:C" or "CVSS:2.0/AV:N/AC:L/Au:N/C:C/I:C/A:C"
-        let components_str =
-            if components_str.starts_with("CVSS:2.0/") || components_str.starts_with("cvss:2.0/") {
-                &components_str[9..] // Skip "CVSS:2.0/"
-            } else {
-                components_str
-            };
+        // if a prefix exists, its version must be 2.0
+        if let Some(version) = version_opt {
+            prefix::validate_allowed_prefix_version(&version, &[Version::V2])?;
+        }
 
         let mut cvss = CvssV2 {
             vector_string: s.to_string(),
