@@ -714,8 +714,7 @@ impl FromStr for CvssV2 {
                         })?);
                 }
                 _ => {
-                    // Silently ignore unknown metrics to be lenient with parsing
-                    // This allows us to parse vectors even if they have metrics we don't recognize
+                    return Err(ParseError::UnknownMetric { metric: key });
                 }
             }
         }
