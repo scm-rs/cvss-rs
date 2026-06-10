@@ -11,6 +11,8 @@ use std::fmt;
 use std::str::FromStr;
 use strum::{Display, EnumString};
 
+use crate::utils::prefix;
+use crate::Version;
 use crate::{ParseError, Severity as UnifiedSeverity};
 
 /// Represents a CVSS v4.0 score object.
@@ -589,37 +591,11 @@ impl FromStr for CvssV4 {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut components = s.split('/');
+        // Extract and validate version prefix
+        let (version, components_str) = prefix::extract_version_from_required_prefix(s)?;
 
-        // Parse version prefix (e.g., "CVSS:4.0")
-        let version_component = components.next().ok_or_else(|| ParseError::InvalidPrefix {
-            found: String::new(),
-        })?;
-
-        let mut version_parts = version_component.split(':');
-        let prefix = version_parts
-            .next()
-            .ok_or_else(|| ParseError::InvalidPrefix {
-                found: version_component.to_string(),
-            })?;
-
-        if !prefix.eq_ignore_ascii_case("CVSS") {
-            return Err(ParseError::InvalidPrefix {
-                found: prefix.to_string(),
-            });
-        }
-
-        let version = version_parts
-            .next()
-            .ok_or_else(|| ParseError::InvalidVersion {
-                version: version_component.to_string(),
-            })?;
-
-        if version != "4.0" {
-            return Err(ParseError::InvalidVersion {
-                version: version.to_string(),
-            });
-        }
+        // Must be 4.0
+        prefix::validate_allowed_prefix_version(&version, &[Version::V4])?;
 
         // Initialize a CvssV4 with empty fields
         let mut cvss = CvssV4 {
@@ -661,7 +637,7 @@ impl FromStr for CvssV4 {
         };
 
         // Parse metrics
-        for component in components {
+        for component in components_str.split('/') {
             if component.is_empty() {
                 continue;
             }
