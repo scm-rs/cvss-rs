@@ -1,6 +1,7 @@
 use cvss::v3::AttackVector;
 use cvss_rs as cvss;
-use cvss_rs::v3::CvssV3;
+use cvss_rs::{v3::CvssV3, ParseError};
+use rstest::rstest;
 use std::str::FromStr;
 
 #[test]
@@ -101,4 +102,37 @@ fn test_v3_1_multiple_unknown_metric_should_error_first() {
         CvssV3::from_str(vector),
         Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
     ));
+}
+
+#[rstest]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/AV:L", "AV")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/AC:H", "AC")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/PR:H", "PR")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/UI:R", "UI")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/S:C", "S")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/C:L", "C")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/I:L", "I")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/A:L", "A")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/E:H/E:P", "E")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/RL:W/RL:OF", "RL")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/RC:C/RC:UC", "RC")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/CR:H/CR:M", "CR")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/IR:H/IR:M", "IR")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/AR:H/AR:M", "AR")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/MAV:L/MAV:A", "MAV")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/MAC:H/MAC:L", "MAC")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/MPR:L/MPR:N", "MPR")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/MUI:R/MUI:N", "MUI")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/MS:C/MS:U", "MS")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/MC:L/MC:H", "MC")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/MI:L/MI:H", "MI")]
+#[case("CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/MA:L/MA:H", "MA")]
+fn test_v3_1_duplicate_metrics_should_error(#[case] vector: &str, #[case] expected_metric: &str) {
+    let result = vector.parse::<CvssV3>();
+    assert!(
+        matches!(result, Err(ParseError::DuplicateMetric { ref metric }) if metric == expected_metric),
+        "Expected DuplicateMetric error for metric '{}', but got: {:?}",
+        expected_metric,
+        result
+    );
 }
