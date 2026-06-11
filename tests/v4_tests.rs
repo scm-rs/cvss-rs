@@ -113,3 +113,13 @@ fn test_v4_0_unknown_metric_should_error() {
         Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
     ));
 }
+
+#[test]
+fn test_v4_0_multiple_unknown_metric_should_error_first() {
+    let vector = "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/XX:H/YY:H";
+
+    assert!(matches!(
+        CvssV4::from_str(vector),
+        Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
+    ));
+}

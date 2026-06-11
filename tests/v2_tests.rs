@@ -30,3 +30,13 @@ fn test_v2_0_unknown_metric_should_error() {
         Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
     ));
 }
+
+#[test]
+fn test_v2_0_multiple_unknown_metric_should_error_first() {
+    let vector = "AV:N/AC:L/Au:N/C:C/I:C/A:C/XX:H/YY:H";
+
+    assert!(matches!(
+        CvssV2::from_str(vector),
+        Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
+    ));
+}
