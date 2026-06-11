@@ -156,3 +156,85 @@ fn test_v4_0_duplicate_metrics_should_error(#[case] vector: &str, #[case] expect
         result
     );
 }
+
+#[test]
+fn test_v4_0_display_round_trip() {
+    // Create a v4.0 vector with all metrics defined
+    let vector_string = "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:L/SI:L/SA:L/E:A/CR:H/IR:H/AR:H/MAV:L/MAC:H/MAT:P/MPR:L/MUI:P/MVC:L/MVI:L/MVA:L/MSC:L/MSI:L/MSA:L/S:P/AU:Y/R:A/V:D/RE:M/U:Green";
+
+    // Parse the vector string
+    let o = CvssV4::from_str(vector_string).expect("Failed to parse vector string");
+
+    // Convert to string using Display
+    let display_string = o.to_string();
+
+    // Parse the display string back
+    let r = CvssV4::from_str(&display_string).expect("Failed to parse Display output");
+
+    // Verify all base metrics
+    assert_eq!(o.attack_vector, r.attack_vector);
+    assert_eq!(o.attack_complexity, r.attack_complexity);
+    assert_eq!(o.attack_requirements, r.attack_requirements);
+    assert_eq!(o.privileges_required, r.privileges_required);
+    assert_eq!(o.user_interaction, r.user_interaction);
+    assert_eq!(o.vuln_confidentiality_impact, r.vuln_confidentiality_impact);
+    assert_eq!(o.vuln_integrity_impact, r.vuln_integrity_impact);
+    assert_eq!(o.vuln_availability_impact, r.vuln_availability_impact);
+    assert_eq!(o.sub_confidentiality_impact, r.sub_confidentiality_impact);
+    assert_eq!(o.sub_integrity_impact, r.sub_integrity_impact);
+    assert_eq!(o.sub_availability_impact, r.sub_availability_impact);
+
+    // Verify threat metrics
+    assert_eq!(o.exploit_maturity, r.exploit_maturity);
+
+    // Verify environmental metrics
+    assert_eq!(o.confidentiality_requirement, r.confidentiality_requirement);
+    assert_eq!(o.integrity_requirement, r.integrity_requirement);
+    assert_eq!(o.availability_requirement, r.availability_requirement);
+    assert_eq!(o.modified_attack_vector, r.modified_attack_vector);
+    assert_eq!(o.modified_attack_complexity, r.modified_attack_complexity);
+    assert_eq!(
+        o.modified_attack_requirements,
+        r.modified_attack_requirements
+    );
+    assert_eq!(
+        o.modified_privileges_required,
+        r.modified_privileges_required
+    );
+    assert_eq!(o.modified_user_interaction, r.modified_user_interaction);
+    assert_eq!(
+        o.modified_vuln_confidentiality_impact,
+        r.modified_vuln_confidentiality_impact
+    );
+    assert_eq!(
+        o.modified_vuln_integrity_impact,
+        r.modified_vuln_integrity_impact
+    );
+    assert_eq!(
+        o.modified_vuln_availability_impact,
+        r.modified_vuln_availability_impact
+    );
+    assert_eq!(
+        o.modified_sub_confidentiality_impact,
+        r.modified_sub_confidentiality_impact
+    );
+    assert_eq!(
+        o.modified_sub_integrity_impact,
+        r.modified_sub_integrity_impact
+    );
+    assert_eq!(
+        o.modified_sub_availability_impact,
+        r.modified_sub_availability_impact
+    );
+
+    // Verify supplemental metrics
+    assert_eq!(o.safety, r.safety);
+    assert_eq!(o.automatable, r.automatable);
+    assert_eq!(o.recovery, r.recovery);
+    assert_eq!(o.value_density, r.value_density);
+    assert_eq!(
+        o.vulnerability_response_effort,
+        r.vulnerability_response_effort
+    );
+    assert_eq!(o.provider_urgency, r.provider_urgency);
+}

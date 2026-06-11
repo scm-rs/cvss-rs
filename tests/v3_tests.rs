@@ -85,6 +85,58 @@ fn test_v3_environmental() {
 }
 
 #[test]
+fn test_v3_1_display_round_trip() {
+    // Create a v3.1 vector with all metrics defined
+    let vector_string = "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/E:F/RL:T/RC:C/CR:H/IR:H/AR:H/MAV:L/MAC:H/MPR:H/MUI:R/MS:C/MC:L/MI:L/MA:L";
+
+    // Parse the vector string
+    let o = CvssV3::from_str(vector_string).expect("Failed to parse vector string");
+
+    // Convert to string using Display
+    let display_string = o.to_string();
+
+    // Parse the display string back
+    let r = CvssV3::from_str(&display_string).expect("Failed to parse Display output");
+
+    // Verify all base metrics
+    assert_eq!(o.attack_vector, r.attack_vector);
+    assert_eq!(o.attack_complexity, r.attack_complexity);
+    assert_eq!(o.privileges_required, r.privileges_required);
+    assert_eq!(o.user_interaction, r.user_interaction);
+    assert_eq!(o.scope, r.scope);
+    assert_eq!(o.confidentiality_impact, r.confidentiality_impact);
+    assert_eq!(o.integrity_impact, r.integrity_impact);
+    assert_eq!(o.availability_impact, r.availability_impact);
+
+    // Verify all temporal metrics
+    assert_eq!(o.exploit_code_maturity, r.exploit_code_maturity);
+    assert_eq!(o.remediation_level, r.remediation_level);
+    assert_eq!(o.report_confidence, r.report_confidence);
+
+    // Verify all environmental metrics
+    assert_eq!(o.confidentiality_requirement, r.confidentiality_requirement);
+    assert_eq!(o.integrity_requirement, r.integrity_requirement);
+    assert_eq!(o.availability_requirement, r.availability_requirement);
+    assert_eq!(o.modified_attack_vector, r.modified_attack_vector);
+    assert_eq!(o.modified_attack_complexity, r.modified_attack_complexity);
+    assert_eq!(
+        o.modified_privileges_required,
+        r.modified_privileges_required
+    );
+    assert_eq!(o.modified_user_interaction, r.modified_user_interaction);
+    assert_eq!(o.modified_scope, r.modified_scope);
+    assert_eq!(
+        o.modified_confidentiality_impact,
+        r.modified_confidentiality_impact
+    );
+    assert_eq!(o.modified_integrity_impact, r.modified_integrity_impact);
+    assert_eq!(
+        o.modified_availability_impact,
+        r.modified_availability_impact
+    );
+}
+
+#[test]
 fn test_v3_1_unknown_metric_should_error() {
     let vector = "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/XX:H";
 
