@@ -639,9 +639,11 @@ impl FromStr for CvssV2 {
 impl fmt::Display for CvssV2 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // CVSS v2 typically doesn't include version prefix, but we'll include it for consistency
-        write!(f, "AV:")?;
+        write!(f, "CVSS:2.0")?;
+
+        // Base metrics
         if let Some(av) = &self.access_vector {
-            write!(f, "{}", av)?;
+            write!(f, "/AV:{}", av)?;
         }
         if let Some(ac) = &self.access_complexity {
             write!(f, "/AC:{}", ac)?;
@@ -657,6 +659,34 @@ impl fmt::Display for CvssV2 {
         }
         if let Some(a) = &self.availability_impact {
             write!(f, "/A:{}", a)?;
+        }
+
+        // Temporal metrics
+        if let Some(e) = &self.exploitability {
+            write!(f, "/E:{}", e)?;
+        }
+        if let Some(rl) = &self.remediation_level {
+            write!(f, "/RL:{}", rl)?;
+        }
+        if let Some(rc) = &self.report_confidence {
+            write!(f, "/RC:{}", rc)?;
+        }
+
+        // Environmental metrics
+        if let Some(cdp) = &self.collateral_damage_potential {
+            write!(f, "/CDP:{}", cdp)?;
+        }
+        if let Some(td) = &self.target_distribution {
+            write!(f, "/TD:{}", td)?;
+        }
+        if let Some(cr) = &self.confidentiality_requirement {
+            write!(f, "/CR:{}", cr)?;
+        }
+        if let Some(ir) = &self.integrity_requirement {
+            write!(f, "/IR:{}", ir)?;
+        }
+        if let Some(ar) = &self.availability_requirement {
+            write!(f, "/AR:{}", ar)?;
         }
 
         Ok(())
