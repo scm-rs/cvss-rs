@@ -23,14 +23,10 @@ fn test_v2_0_minimal() {
 
 #[test]
 fn test_v2_0_unknown_metric_should_error() {
-    // Test that unknown metrics are rejected, not silently ignored
     let vector = "AV:N/AC:L/Au:N/C:C/I:C/A:C/XX:H";
-    let result = CvssV2::from_str(vector);
 
-    assert!(result.is_err(), "Should reject unknown metric XX");
-    if let Err(cvss::ParseError::UnknownMetric { metric }) = result {
-        assert_eq!(metric, "XX");
-    } else {
-        panic!("Expected UnknownMetric error");
-    }
+    assert!(matches!(
+        CvssV2::from_str(vector),
+        Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
+    ));
 }

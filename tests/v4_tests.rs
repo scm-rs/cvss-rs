@@ -106,15 +106,10 @@ fn test_v4_0_provider_urgency_values() {
 
 #[test]
 fn test_v4_0_unknown_metric_should_error() {
-    // Test that unknown metrics are rejected, not silently ignored
     let vector = "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/XX:H";
-    let result = CvssV4::from_str(vector);
 
-    assert!(result.is_err(), "Should reject unknown metric XX");
-    match result {
-        Err(cvss::ParseError::UnknownMetric { metric }) => {
-            assert_eq!(metric, "XX");
-        }
-        _ => panic!("Expected UnknownMetric error"),
-    }
+    assert!(matches!(
+        CvssV4::from_str(vector),
+        Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
+    ));
 }
