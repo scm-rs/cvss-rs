@@ -3,12 +3,18 @@ use thiserror::Error;
 /// Errors that can occur when parsing CVSS vector strings.
 #[derive(Clone, Debug, PartialEq, Error)]
 pub enum ParseError {
-    /// Vector string doesn't start with "CVSS" or expected prefix
-    #[error("invalid vector prefix: expected 'CVSS', found '{found}'")]
-    InvalidPrefix { found: String },
+    /// Vector string is malformed (e.g., missing '/' separators)
+    #[error("malformed vector string: no '/' separator found")]
+    MalformedVectorString,
+    /// Vector string doesn't start with "CVSS:"
+    #[error("invalid vector prefix: expected prefix to start with 'CVSS:', found '{found}'")]
+    InvalidPrefixLabel { found: String },
+    /// CVSS version has unexpected format
+    #[error("malformed CVSS version format: '{version}' (expected 'X.Y')")]
+    MalformedPrefixVersion { version: String },
     /// Unsupported or invalid CVSS version
     #[error("invalid or unsupported CVSS version: '{version}'")]
-    InvalidVersion { version: String },
+    InvalidPrefixVersion { version: String },
     /// Component is malformed (not in key:value format)
     #[error("invalid component format: '{component}' (expected 'KEY:VALUE')")]
     InvalidComponent { component: String },

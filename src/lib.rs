@@ -40,17 +40,21 @@
 //!     panic!("Expected Cvss::V3_1 variant");
 //! }
 //! ```
+
 use serde::Deserialize;
 use std::fmt::{Display, Formatter};
 use strum::{Display, EnumDiscriminants, EnumString};
+
 pub mod error;
 pub(crate) mod utils;
 pub mod v2_0;
 pub mod v3;
 pub mod v4_0;
 pub mod version;
+
 // Re-export for API stability
 pub use error::ParseError;
+
 /// An enum to hold any version of a CVSS object.
 #[derive(Debug, Deserialize, EnumDiscriminants)]
 #[serde(tag = "version")]
@@ -71,16 +75,19 @@ pub enum Cvss {
     #[strum_discriminants(strum(serialize = "4.0"))]
     V4(v4_0::CvssV4),
 }
+
 impl Display for Cvss {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.vector_string())
     }
 }
+
 impl Cvss {
     /// Returns the version of the CVSS standard.
     pub fn version(&self) -> Version {
         self.into()
     }
+
     /// Returns the CVSS vector string.
     pub fn vector_string(&self) -> &str {
         match self {
@@ -90,6 +97,7 @@ impl Cvss {
             Cvss::V4(c) => c.vector_string(),
         }
     }
+
     /// Returns the base score.
     pub fn base_score(&self) -> f64 {
         match self {
@@ -99,6 +107,7 @@ impl Cvss {
             Cvss::V4(c) => c.base_score(),
         }
     }
+
     /// Returns the base severity.
     pub fn base_severity(&self) -> Option<Severity> {
         match self {
@@ -109,6 +118,7 @@ impl Cvss {
         }
     }
 }
+
 /// Represents the qualitative severity rating of a vulnerability.
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(rename_all = "UPPERCASE")]
