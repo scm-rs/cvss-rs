@@ -1,6 +1,7 @@
-use cvss::v3::AttackVector;
-use cvss_rs as cvss;
-use cvss_rs::{v3::CvssV3, ParseError};
+use cvss_rs::{
+    v3::{AttackVector, CvssV3},
+    Cvss, ParseError, Severity, Version,
+};
 use rstest::rstest;
 use std::str::FromStr;
 
@@ -40,34 +41,34 @@ fn test_v3_1_rounding_examples() {
 #[test]
 fn test_v3_1_critical() {
     let input_json = include_str!("data/v3_1_critical.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V3_1);
+    assert_eq!(cvss.version(), Version::V3_1);
     assert_eq!(cvss.base_score(), 9.8);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::Critical);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::Critical);
 }
 
 #[test]
 fn test_v3_0_critical() {
     let input_json = include_str!("data/v3_0_critical.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V3_0);
+    assert_eq!(cvss.version(), Version::V3_0);
     assert_eq!(cvss.base_score(), 9.8);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::Critical);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::Critical);
 }
 
 #[test]
 fn test_v3_1_medium() {
     let input_json = include_str!("data/v3_1_medium.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V3_1);
+    assert_eq!(cvss.version(), Version::V3_1);
     assert_eq!(cvss.base_score(), 5.8);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::Medium);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::Medium);
 
     // Custom assertion for v3_1_medium
-    if let cvss::Cvss::V3_1(c) = cvss {
+    if let Cvss::V3_1(c) = cvss {
         assert_eq!(c.attack_vector, Some(AttackVector::Local));
     } else {
         panic!("Wrong enum variant");
@@ -77,11 +78,11 @@ fn test_v3_1_medium() {
 #[test]
 fn test_v3_environmental() {
     let input_json = include_str!("data/v3_environmental.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V3_1);
+    assert_eq!(cvss.version(), Version::V3_1);
     assert_eq!(cvss.base_score(), 9.6);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::Critical);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::Critical);
 }
 
 #[test]
@@ -95,44 +96,11 @@ fn test_v3_1_display_round_trip() {
     // Convert to string using Display
     let display_string = o.to_string();
 
-    // Parse the display string back
-    let r = CvssV3::from_str(&display_string).expect("Failed to parse Display output");
-
-    // Verify all base metrics
-    assert_eq!(o.attack_vector, r.attack_vector);
-    assert_eq!(o.attack_complexity, r.attack_complexity);
-    assert_eq!(o.privileges_required, r.privileges_required);
-    assert_eq!(o.user_interaction, r.user_interaction);
-    assert_eq!(o.scope, r.scope);
-    assert_eq!(o.confidentiality_impact, r.confidentiality_impact);
-    assert_eq!(o.integrity_impact, r.integrity_impact);
-    assert_eq!(o.availability_impact, r.availability_impact);
-
-    // Verify all temporal metrics
-    assert_eq!(o.exploit_code_maturity, r.exploit_code_maturity);
-    assert_eq!(o.remediation_level, r.remediation_level);
-    assert_eq!(o.report_confidence, r.report_confidence);
-
-    // Verify all environmental metrics
-    assert_eq!(o.confidentiality_requirement, r.confidentiality_requirement);
-    assert_eq!(o.integrity_requirement, r.integrity_requirement);
-    assert_eq!(o.availability_requirement, r.availability_requirement);
-    assert_eq!(o.modified_attack_vector, r.modified_attack_vector);
-    assert_eq!(o.modified_attack_complexity, r.modified_attack_complexity);
+    // Verify round-trip
     assert_eq!(
-        o.modified_privileges_required,
-        r.modified_privileges_required
-    );
-    assert_eq!(o.modified_user_interaction, r.modified_user_interaction);
-    assert_eq!(o.modified_scope, r.modified_scope);
-    assert_eq!(
-        o.modified_confidentiality_impact,
-        r.modified_confidentiality_impact
-    );
-    assert_eq!(o.modified_integrity_impact, r.modified_integrity_impact);
-    assert_eq!(
-        o.modified_availability_impact,
-        r.modified_availability_impact
+        display_string, vector_string,
+        "Round-trip failed for: {}",
+        vector_string
     );
 }
 
@@ -142,7 +110,7 @@ fn test_v3_1_unknown_metric_should_error() {
 
     assert!(matches!(
         CvssV3::from_str(vector),
-        Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
+        Err(ParseError::UnknownMetric { metric }) if metric == "XX"
     ));
 }
 
@@ -152,7 +120,7 @@ fn test_v3_1_multiple_unknown_metric_should_error_first() {
 
     assert!(matches!(
         CvssV3::from_str(vector),
-        Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
+        Err(ParseError::UnknownMetric { metric }) if metric == "XX"
     ));
 }
 

@@ -1,5 +1,4 @@
-use cvss_rs as cvss;
-use cvss_rs::{v4_0::CvssV4, ParseError};
+use cvss_rs::{v4_0::CvssV4, Cvss, ParseError, Severity, Version};
 use rstest::rstest;
 use std::str::FromStr;
 
@@ -37,31 +36,31 @@ fn test_v4_0_exploit_maturity_notdefined() {
 #[test]
 fn test_v4_0_example() {
     let input_json = include_str!("data/v4_0_example.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V4);
+    assert_eq!(cvss.version(), Version::V4);
     assert_eq!(cvss.base_score(), 9.3);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::Critical);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::Critical);
 }
 
 #[test]
 fn test_v4_0_cve_example() {
     let input_json = include_str!("data/v4_0_cve_example.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V4);
+    assert_eq!(cvss.version(), Version::V4);
     assert_eq!(cvss.base_score(), 5.9);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::Medium);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::Medium);
 }
 
 #[test]
 fn test_v4_0_minimal() {
     let input_json = include_str!("data/v4_0_minimal.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V4);
+    assert_eq!(cvss.version(), Version::V4);
     assert_eq!(cvss.base_score(), 9.9);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::Critical);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::Critical);
 }
 
 #[test]
@@ -111,7 +110,7 @@ fn test_v4_0_unknown_metric_should_error() {
 
     assert!(matches!(
         CvssV4::from_str(vector),
-        Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
+        Err(ParseError::UnknownMetric { metric }) if metric == "XX"
     ));
 }
 
@@ -121,7 +120,7 @@ fn test_v4_0_multiple_unknown_metric_should_error_first() {
 
     assert!(matches!(
         CvssV4::from_str(vector),
-        Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
+        Err(ParseError::UnknownMetric { metric }) if metric == "XX"
     ));
 }
 
@@ -168,73 +167,10 @@ fn test_v4_0_display_round_trip() {
     // Convert to string using Display
     let display_string = o.to_string();
 
-    // Parse the display string back
-    let r = CvssV4::from_str(&display_string).expect("Failed to parse Display output");
-
-    // Verify all base metrics
-    assert_eq!(o.attack_vector, r.attack_vector);
-    assert_eq!(o.attack_complexity, r.attack_complexity);
-    assert_eq!(o.attack_requirements, r.attack_requirements);
-    assert_eq!(o.privileges_required, r.privileges_required);
-    assert_eq!(o.user_interaction, r.user_interaction);
-    assert_eq!(o.vuln_confidentiality_impact, r.vuln_confidentiality_impact);
-    assert_eq!(o.vuln_integrity_impact, r.vuln_integrity_impact);
-    assert_eq!(o.vuln_availability_impact, r.vuln_availability_impact);
-    assert_eq!(o.sub_confidentiality_impact, r.sub_confidentiality_impact);
-    assert_eq!(o.sub_integrity_impact, r.sub_integrity_impact);
-    assert_eq!(o.sub_availability_impact, r.sub_availability_impact);
-
-    // Verify threat metrics
-    assert_eq!(o.exploit_maturity, r.exploit_maturity);
-
-    // Verify environmental metrics
-    assert_eq!(o.confidentiality_requirement, r.confidentiality_requirement);
-    assert_eq!(o.integrity_requirement, r.integrity_requirement);
-    assert_eq!(o.availability_requirement, r.availability_requirement);
-    assert_eq!(o.modified_attack_vector, r.modified_attack_vector);
-    assert_eq!(o.modified_attack_complexity, r.modified_attack_complexity);
+    // Verify round-trip
     assert_eq!(
-        o.modified_attack_requirements,
-        r.modified_attack_requirements
+        display_string, vector_string,
+        "Round-trip failed for: {}",
+        vector_string
     );
-    assert_eq!(
-        o.modified_privileges_required,
-        r.modified_privileges_required
-    );
-    assert_eq!(o.modified_user_interaction, r.modified_user_interaction);
-    assert_eq!(
-        o.modified_vuln_confidentiality_impact,
-        r.modified_vuln_confidentiality_impact
-    );
-    assert_eq!(
-        o.modified_vuln_integrity_impact,
-        r.modified_vuln_integrity_impact
-    );
-    assert_eq!(
-        o.modified_vuln_availability_impact,
-        r.modified_vuln_availability_impact
-    );
-    assert_eq!(
-        o.modified_sub_confidentiality_impact,
-        r.modified_sub_confidentiality_impact
-    );
-    assert_eq!(
-        o.modified_sub_integrity_impact,
-        r.modified_sub_integrity_impact
-    );
-    assert_eq!(
-        o.modified_sub_availability_impact,
-        r.modified_sub_availability_impact
-    );
-
-    // Verify supplemental metrics
-    assert_eq!(o.safety, r.safety);
-    assert_eq!(o.automatable, r.automatable);
-    assert_eq!(o.recovery, r.recovery);
-    assert_eq!(o.value_density, r.value_density);
-    assert_eq!(
-        o.vulnerability_response_effort,
-        r.vulnerability_response_effort
-    );
-    assert_eq!(o.provider_urgency, r.provider_urgency);
 }

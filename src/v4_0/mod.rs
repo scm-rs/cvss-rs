@@ -12,7 +12,7 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 use strum::{Display, EnumString};
 
-use crate::utils::{parse_metrics::parse_metric, prefix};
+use crate::utils::{format_vector::write_metric, parse_metrics::parse_metric, prefix};
 use crate::{ParseError, Severity as UnifiedSeverity, Version};
 
 /// Represents a CVSS v4.0 score object.
@@ -718,108 +718,44 @@ impl fmt::Display for CvssV4 {
         write!(f, "CVSS:4.0")?;
 
         // Base metrics
-        if let Some(av) = &self.attack_vector {
-            write!(f, "/AV:{}", av)?;
-        }
-        if let Some(ac) = &self.attack_complexity {
-            write!(f, "/AC:{}", ac)?;
-        }
-        if let Some(at) = &self.attack_requirements {
-            write!(f, "/AT:{}", at)?;
-        }
-        if let Some(pr) = &self.privileges_required {
-            write!(f, "/PR:{}", pr)?;
-        }
-        if let Some(ui) = &self.user_interaction {
-            write!(f, "/UI:{}", ui)?;
-        }
-        if let Some(vc) = &self.vuln_confidentiality_impact {
-            write!(f, "/VC:{}", vc)?;
-        }
-        if let Some(vi) = &self.vuln_integrity_impact {
-            write!(f, "/VI:{}", vi)?;
-        }
-        if let Some(va) = &self.vuln_availability_impact {
-            write!(f, "/VA:{}", va)?;
-        }
-        if let Some(sc) = &self.sub_confidentiality_impact {
-            write!(f, "/SC:{}", sc)?;
-        }
-        if let Some(si) = &self.sub_integrity_impact {
-            write!(f, "/SI:{}", si)?;
-        }
-        if let Some(sa) = &self.sub_availability_impact {
-            write!(f, "/SA:{}", sa)?;
-        }
+        write_metric(f, "AV", self.attack_vector.as_ref())?;
+        write_metric(f, "AC", self.attack_complexity.as_ref())?;
+        write_metric(f, "AT", self.attack_requirements.as_ref())?;
+        write_metric(f, "PR", self.privileges_required.as_ref())?;
+        write_metric(f, "UI", self.user_interaction.as_ref())?;
+        write_metric(f, "VC", self.vuln_confidentiality_impact.as_ref())?;
+        write_metric(f, "VI", self.vuln_integrity_impact.as_ref())?;
+        write_metric(f, "VA", self.vuln_availability_impact.as_ref())?;
+        write_metric(f, "SC", self.sub_confidentiality_impact.as_ref())?;
+        write_metric(f, "SI", self.sub_integrity_impact.as_ref())?;
+        write_metric(f, "SA", self.sub_availability_impact.as_ref())?;
 
         // Threat metrics
-        if let Some(e) = &self.exploit_maturity {
-            write!(f, "/E:{}", e)?;
-        }
+        write_metric(f, "E", self.exploit_maturity.as_ref())?;
 
         // Environmental metrics
-        if let Some(cr) = &self.confidentiality_requirement {
-            write!(f, "/CR:{}", cr)?;
-        }
-        if let Some(ir) = &self.integrity_requirement {
-            write!(f, "/IR:{}", ir)?;
-        }
-        if let Some(ar) = &self.availability_requirement {
-            write!(f, "/AR:{}", ar)?;
-        }
-        if let Some(mav) = &self.modified_attack_vector {
-            write!(f, "/MAV:{}", mav)?;
-        }
-        if let Some(mac) = &self.modified_attack_complexity {
-            write!(f, "/MAC:{}", mac)?;
-        }
-        if let Some(mat) = &self.modified_attack_requirements {
-            write!(f, "/MAT:{}", mat)?;
-        }
-        if let Some(mpr) = &self.modified_privileges_required {
-            write!(f, "/MPR:{}", mpr)?;
-        }
-        if let Some(mui) = &self.modified_user_interaction {
-            write!(f, "/MUI:{}", mui)?;
-        }
-        if let Some(mvc) = &self.modified_vuln_confidentiality_impact {
-            write!(f, "/MVC:{}", mvc)?;
-        }
-        if let Some(mvi) = &self.modified_vuln_integrity_impact {
-            write!(f, "/MVI:{}", mvi)?;
-        }
-        if let Some(mva) = &self.modified_vuln_availability_impact {
-            write!(f, "/MVA:{}", mva)?;
-        }
-        if let Some(msc) = &self.modified_sub_confidentiality_impact {
-            write!(f, "/MSC:{}", msc)?;
-        }
-        if let Some(msi) = &self.modified_sub_integrity_impact {
-            write!(f, "/MSI:{}", msi)?;
-        }
-        if let Some(msa) = &self.modified_sub_availability_impact {
-            write!(f, "/MSA:{}", msa)?;
-        }
+        write_metric(f, "CR", self.confidentiality_requirement.as_ref())?;
+        write_metric(f, "IR", self.integrity_requirement.as_ref())?;
+        write_metric(f, "AR", self.availability_requirement.as_ref())?;
+        write_metric(f, "MAV", self.modified_attack_vector.as_ref())?;
+        write_metric(f, "MAC", self.modified_attack_complexity.as_ref())?;
+        write_metric(f, "MAT", self.modified_attack_requirements.as_ref())?;
+        write_metric(f, "MPR", self.modified_privileges_required.as_ref())?;
+        write_metric(f, "MUI", self.modified_user_interaction.as_ref())?;
+        write_metric(f, "MVC", self.modified_vuln_confidentiality_impact.as_ref())?;
+        write_metric(f, "MVI", self.modified_vuln_integrity_impact.as_ref())?;
+        write_metric(f, "MVA", self.modified_vuln_availability_impact.as_ref())?;
+        write_metric(f, "MSC", self.modified_sub_confidentiality_impact.as_ref())?;
+        write_metric(f, "MSI", self.modified_sub_integrity_impact.as_ref())?;
+        write_metric(f, "MSA", self.modified_sub_availability_impact.as_ref())?;
 
         // Supplemental metrics
-        if let Some(s) = &self.safety {
-            write!(f, "/S:{}", s)?;
-        }
-        if let Some(au) = &self.automatable {
-            write!(f, "/AU:{}", au)?;
-        }
-        if let Some(r) = &self.recovery {
-            write!(f, "/R:{}", r)?;
-        }
-        if let Some(v) = &self.value_density {
-            write!(f, "/V:{}", v)?;
-        }
-        if let Some(re) = &self.vulnerability_response_effort {
-            write!(f, "/RE:{}", re)?;
-        }
-        if let Some(u) = &self.provider_urgency {
-            write!(f, "/U:{}", u)?;
-        }
+        write_metric(f, "S", self.safety.as_ref())?;
+        write_metric(f, "AU", self.automatable.as_ref())?;
+        write_metric(f, "R", self.recovery.as_ref())?;
+        write_metric(f, "V", self.value_density.as_ref())?;
+        write_metric(f, "RE", self.vulnerability_response_effort.as_ref())?;
+        write_metric(f, "U", self.provider_urgency.as_ref())?;
 
         Ok(())
     }
