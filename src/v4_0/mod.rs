@@ -387,7 +387,7 @@ pub enum ModifiedSubsequentImpact {
     #[strum(serialize = "L")]
     Low,
     #[strum(serialize = "N")]
-    None,
+    Negligible,
     #[strum(serialize = "X")]
     NotDefined,
 }
