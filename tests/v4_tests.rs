@@ -1,5 +1,4 @@
-use cvss_rs as cvss;
-use cvss_rs::{v4_0::CvssV4, ParseError};
+use cvss_rs::{v4_0::CvssV4, Cvss, ParseError, Severity, Version};
 use rstest::rstest;
 use std::str::FromStr;
 
@@ -37,31 +36,31 @@ fn test_v4_0_exploit_maturity_notdefined() {
 #[test]
 fn test_v4_0_example() {
     let input_json = include_str!("data/v4_0_example.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V4);
+    assert_eq!(cvss.version(), Version::V4);
     assert_eq!(cvss.base_score(), 9.3);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::Critical);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::Critical);
 }
 
 #[test]
 fn test_v4_0_cve_example() {
     let input_json = include_str!("data/v4_0_cve_example.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V4);
+    assert_eq!(cvss.version(), Version::V4);
     assert_eq!(cvss.base_score(), 5.9);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::Medium);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::Medium);
 }
 
 #[test]
 fn test_v4_0_minimal() {
     let input_json = include_str!("data/v4_0_minimal.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V4);
+    assert_eq!(cvss.version(), Version::V4);
     assert_eq!(cvss.base_score(), 9.9);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::Critical);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::Critical);
 }
 
 #[test]
@@ -111,7 +110,7 @@ fn test_v4_0_unknown_metric_should_error() {
 
     assert!(matches!(
         CvssV4::from_str(vector),
-        Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
+        Err(ParseError::UnknownMetric { metric }) if metric == "XX"
     ));
 }
 
@@ -121,7 +120,7 @@ fn test_v4_0_multiple_unknown_metric_should_error_first() {
 
     assert!(matches!(
         CvssV4::from_str(vector),
-        Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
+        Err(ParseError::UnknownMetric { metric }) if metric == "XX"
     ));
 }
 
@@ -154,5 +153,24 @@ fn test_v4_0_duplicate_metrics_should_error(#[case] vector: &str, #[case] expect
         "Expected DuplicateMetric error for metric '{}', but got: {:?}",
         expected_metric,
         result
+    );
+}
+
+#[test]
+fn test_v4_0_display_round_trip() {
+    // Create a v4.0 vector with all metrics defined
+    let vector_string = "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:L/SI:L/SA:L/E:A/CR:H/IR:H/AR:H/MAV:L/MAC:H/MAT:P/MPR:L/MUI:P/MVC:L/MVI:L/MVA:L/MSC:L/MSI:L/MSA:L/S:P/AU:Y/R:A/V:D/RE:M/U:Green";
+
+    // Parse the vector string
+    let o = CvssV4::from_str(vector_string).expect("Failed to parse vector string");
+
+    // Convert to string using Display
+    let display_string = o.to_string();
+
+    // Verify round-trip
+    assert_eq!(
+        display_string, vector_string,
+        "Round-trip failed for: {}",
+        vector_string
     );
 }

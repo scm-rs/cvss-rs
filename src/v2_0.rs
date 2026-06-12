@@ -68,6 +68,10 @@ pub struct CvssV2 {
     /// The availability requirement metric (environmental).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub availability_requirement: Option<SecurityRequirement>,
+    /// Whether the vector string had the CVSS:2.0/ prefix during parsing.
+    /// This is part of the CVSS data, so it's skipped during serialization.
+    #[serde(skip)]
+    pub has_prefix: bool,
 }
 
 /// Represents the qualitative severity rating of a vulnerability.
@@ -582,6 +586,7 @@ impl FromStr for CvssV2 {
             confidentiality_requirement: None,
             integrity_requirement: None,
             availability_requirement: None,
+            has_prefix: version_opt.is_some(),
         };
 
         // Parse metrics
@@ -638,26 +643,53 @@ impl FromStr for CvssV2 {
 
 impl fmt::Display for CvssV2 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // CVSS v2 typically doesn't include version prefix, but we'll include it for consistency
-        write!(f, "AV:")?;
-        if let Some(av) = &self.access_vector {
-            write!(f, "{}", av)?;
+        // write prefix if it was present in the original parsed vector
+        if self.has_prefix {
+            write!(f, "CVSS:2.0")?;
         }
-        if let Some(ac) = &self.access_complexity {
-            write!(f, "/AC:{}", ac)?;
+
+        // if there is a prefix, the first metric needs a leading slash (CVSS:2.0 / AV:H)
+        // if there isn't a prefix, the first metric must not have a leading slash (AV:H)
+        let mut write_leading_slash = !self.has_prefix;
+
+        // closure to write metrics with/without a leading separator
+        let mut write_metric = |name: &str, value: Option<&dyn fmt::Display>| -> fmt::Result {
+            if let Some(val) = value {
+                if !write_leading_slash {
+                    write!(f, "/")?;
+                }
+                write!(f, "{}:{}", name, val)?;
+                write_leading_slash = false;
+            }
+            Ok(())
+        };
+
+        // helper macro to avoid the repetitive dyn casting required for the closure
+        macro_rules! write_metric {
+            ($name:expr, $field:expr) => {
+                write_metric($name, $field.as_ref().map(|v| v as &dyn fmt::Display))
+            };
         }
-        if let Some(au) = &self.authentication {
-            write!(f, "/Au:{}", au)?;
-        }
-        if let Some(c) = &self.confidentiality_impact {
-            write!(f, "/C:{}", c)?;
-        }
-        if let Some(i) = &self.integrity_impact {
-            write!(f, "/I:{}", i)?;
-        }
-        if let Some(a) = &self.availability_impact {
-            write!(f, "/A:{}", a)?;
-        }
+
+        // Base metrics
+        write_metric!("AV", self.access_vector)?;
+        write_metric!("AC", self.access_complexity)?;
+        write_metric!("Au", self.authentication)?;
+        write_metric!("C", self.confidentiality_impact)?;
+        write_metric!("I", self.integrity_impact)?;
+        write_metric!("A", self.availability_impact)?;
+
+        // Temporal metrics
+        write_metric!("E", self.exploitability)?;
+        write_metric!("RL", self.remediation_level)?;
+        write_metric!("RC", self.report_confidence)?;
+
+        // Environmental metrics
+        write_metric!("CDP", self.collateral_damage_potential)?;
+        write_metric!("TD", self.target_distribution)?;
+        write_metric!("CR", self.confidentiality_requirement)?;
+        write_metric!("IR", self.integrity_requirement)?;
+        write_metric!("AR", self.availability_requirement)?;
 
         Ok(())
     }

@@ -1,24 +1,23 @@
-use cvss_rs as cvss;
-use cvss_rs::{v2_0::CvssV2, ParseError};
+use cvss_rs::{v2_0::CvssV2, Cvss, ParseError, Severity, Version};
 use rstest::rstest;
 use std::str::FromStr;
 
 #[test]
 fn test_v2_0_example() {
     let input_json = include_str!("data/v2_0_example.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V2);
+    assert_eq!(cvss.version(), Version::V2);
     assert_eq!(cvss.base_score(), 7.5);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::High);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::High);
 }
 
 #[test]
 fn test_v2_0_minimal() {
     let input_json = include_str!("data/v2_0_minimal.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V2);
+    assert_eq!(cvss.version(), Version::V2);
     assert_eq!(cvss.base_score(), 7.5);
 }
 
@@ -28,7 +27,7 @@ fn test_v2_0_unknown_metric_should_error() {
 
     assert!(matches!(
         CvssV2::from_str(vector),
-        Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
+        Err(ParseError::UnknownMetric { metric }) if metric == "XX"
     ));
 }
 
@@ -38,7 +37,7 @@ fn test_v2_0_multiple_unknown_metric_should_error_first() {
 
     assert!(matches!(
         CvssV2::from_str(vector),
-        Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
+        Err(ParseError::UnknownMetric { metric }) if metric == "XX"
     ));
 }
 
@@ -64,5 +63,23 @@ fn test_v2_0_duplicate_metrics_should_error(#[case] vector: &str, #[case] expect
         "Expected DuplicateMetric error for metric '{}', but got: {:?}",
         expected_metric,
         result
+    );
+}
+
+#[rstest]
+#[case("CVSS:2.0/AV:N/AC:L/Au:N/C:C/I:C/A:C/E:F/RL:OF/RC:C/CDP:H/TD:H/CR:H/IR:H/AR:H")]
+#[case("AV:N/AC:L/Au:N/C:C/I:C/A:C/E:F/RL:OF/RC:C/CDP:H/TD:H/CR:H/IR:H/AR:H")]
+fn test_v2_0_display_round_trip(#[case] vector_str: &str) {
+    // Parse the vector string
+    let parsed = CvssV2::from_str(vector_str).expect("Failed to parse vector string");
+
+    // Convert to string using Display
+    let parsed_str = parsed.to_string();
+
+    // Verify round-trip
+    assert_eq!(
+        parsed_str, vector_str,
+        "Round-trip failed for: {}",
+        vector_str
     );
 }

@@ -1,6 +1,7 @@
-use cvss::v3::AttackVector;
-use cvss_rs as cvss;
-use cvss_rs::{v3::CvssV3, ParseError};
+use cvss_rs::{
+    v3::{AttackVector, CvssV3},
+    Cvss, ParseError, Severity, Version,
+};
 use rstest::rstest;
 use std::str::FromStr;
 
@@ -40,34 +41,34 @@ fn test_v3_1_rounding_examples() {
 #[test]
 fn test_v3_1_critical() {
     let input_json = include_str!("data/v3_1_critical.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V3_1);
+    assert_eq!(cvss.version(), Version::V3_1);
     assert_eq!(cvss.base_score(), 9.8);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::Critical);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::Critical);
 }
 
 #[test]
 fn test_v3_0_critical() {
     let input_json = include_str!("data/v3_0_critical.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V3_0);
+    assert_eq!(cvss.version(), Version::V3_0);
     assert_eq!(cvss.base_score(), 9.8);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::Critical);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::Critical);
 }
 
 #[test]
 fn test_v3_1_medium() {
     let input_json = include_str!("data/v3_1_medium.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V3_1);
+    assert_eq!(cvss.version(), Version::V3_1);
     assert_eq!(cvss.base_score(), 5.8);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::Medium);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::Medium);
 
     // Custom assertion for v3_1_medium
-    if let cvss::Cvss::V3_1(c) = cvss {
+    if let Cvss::V3_1(c) = cvss {
         assert_eq!(c.attack_vector, Some(AttackVector::Local));
     } else {
         panic!("Wrong enum variant");
@@ -77,11 +78,30 @@ fn test_v3_1_medium() {
 #[test]
 fn test_v3_environmental() {
     let input_json = include_str!("data/v3_environmental.json");
-    let cvss: cvss::Cvss = serde_json::from_str(input_json).unwrap();
+    let cvss: Cvss = serde_json::from_str(input_json).unwrap();
 
-    assert_eq!(cvss.version(), cvss::Version::V3_1);
+    assert_eq!(cvss.version(), Version::V3_1);
     assert_eq!(cvss.base_score(), 9.6);
-    assert_eq!(cvss.base_severity().unwrap(), cvss::Severity::Critical);
+    assert_eq!(cvss.base_severity().unwrap(), Severity::Critical);
+}
+
+#[test]
+fn test_v3_1_display_round_trip() {
+    // Create a v3.1 vector with all metrics defined
+    let vector_string = "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/E:F/RL:T/RC:C/CR:H/IR:H/AR:H/MAV:L/MAC:H/MPR:H/MUI:R/MS:C/MC:L/MI:L/MA:L";
+
+    // Parse the vector string
+    let o = CvssV3::from_str(vector_string).expect("Failed to parse vector string");
+
+    // Convert to string using Display
+    let display_string = o.to_string();
+
+    // Verify round-trip
+    assert_eq!(
+        display_string, vector_string,
+        "Round-trip failed for: {}",
+        vector_string
+    );
 }
 
 #[test]
@@ -90,7 +110,7 @@ fn test_v3_1_unknown_metric_should_error() {
 
     assert!(matches!(
         CvssV3::from_str(vector),
-        Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
+        Err(ParseError::UnknownMetric { metric }) if metric == "XX"
     ));
 }
 
@@ -100,7 +120,7 @@ fn test_v3_1_multiple_unknown_metric_should_error_first() {
 
     assert!(matches!(
         CvssV3::from_str(vector),
-        Err(cvss::ParseError::UnknownMetric { metric }) if metric == "XX"
+        Err(ParseError::UnknownMetric { metric }) if metric == "XX"
     ));
 }
 
