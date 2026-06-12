@@ -163,7 +163,7 @@ fn merge_subsequent_impact(
         Some(ModifiedSubsequentImpact::Safety) => SubsequentImpact::Safety,
         Some(ModifiedSubsequentImpact::High) => SubsequentImpact::High,
         Some(ModifiedSubsequentImpact::Low) => SubsequentImpact::Low,
-        Some(ModifiedSubsequentImpact::None) => SubsequentImpact::None,
+        Some(ModifiedSubsequentImpact::Negligible) => SubsequentImpact::None,
     }
 }
 
