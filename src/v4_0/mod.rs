@@ -13,7 +13,13 @@ use serde::{Deserialize, Serialize};
 use strum::{Display, EnumString};
 
 use crate::utils::{parse_metrics::parse_metric, prefix};
-use crate::{ParseError, Severity as UnifiedSeverity, Version};
+use crate::{ParseError, Severity as UnifiedSeverity, Version, version::VersionV4};
+
+/// The version every `CvssV4` carries; the FIRST v4.0 schema requires
+/// the key, so deserialization fills it when a document omits it.
+fn default_version() -> VersionV4 {
+    VersionV4::V4_0
+}
 
 /// Represents a CVSS v4.0 score object.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -21,6 +27,11 @@ use crate::{ParseError, Severity as UnifiedSeverity, Version};
 pub struct CvssV4 {
     /// The CVSS vector string.
     pub vector_string: String,
+    /// The CVSS version, always `4.0` for this struct; the FIRST schema
+    /// requires it. Defaults on deserialization, so documents that omit
+    /// the key keep reading while serialization always emits it.
+    #[serde(default = "default_version")]
+    pub version: VersionV4,
     /// The base score, a value between 0.0 and 10.0.
     pub base_score: f64,
     /// The qualitative severity rating for the base score.
@@ -600,6 +611,7 @@ impl FromStr for CvssV4 {
         // Initialize a CvssV4 with empty fields
         let mut cvss = CvssV4 {
             vector_string: s.to_string(),
+            version: VersionV4::V4_0,
             base_score: 0.0,
             base_severity: Severity::None,
             attack_vector: None,
