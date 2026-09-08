@@ -7,7 +7,9 @@ use serde::{Deserialize, Serialize};
 use strum::{Display, EnumString};
 
 use crate::utils::{parse_metrics::parse_metric, prefix};
-use crate::{ParseError, Severity as UnifiedSeverity, Version, version::VersionV3};
+use crate::{
+    Defined, ParseError, Severity as UnifiedSeverity, Version, impl_defined, version::VersionV3,
+};
 
 /// Represents a CVSS v3.0 or v3.1 score object.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -369,6 +371,19 @@ impl SecurityRequirement {
     }
 }
 
+impl_defined!(
+    AttackVector,
+    AttackComplexity,
+    PrivilegesRequired,
+    UserInteraction,
+    Scope,
+    Impact,
+    ExploitCodeMaturity,
+    RemediationLevel,
+    ReportConfidence,
+    SecurityRequirement,
+);
+
 impl CvssV3 {
     pub fn vector_string(&self) -> &str {
         &self.vector_string
@@ -472,42 +487,42 @@ impl CvssV3 {
         let mav = self
             .modified_attack_vector
             .as_ref()
-            .filter(|v| !matches!(v, AttackVector::NotDefined))
+            .and_then(|v| v.as_defined())
             .unwrap_or(av);
         let mac = self
             .modified_attack_complexity
             .as_ref()
-            .filter(|v| !matches!(v, AttackComplexity::NotDefined))
+            .and_then(|v| v.as_defined())
             .unwrap_or(ac);
         let mpr = self
             .modified_privileges_required
             .as_ref()
-            .filter(|v| !matches!(v, PrivilegesRequired::NotDefined))
+            .and_then(|v| v.as_defined())
             .unwrap_or(pr);
         let mui = self
             .modified_user_interaction
             .as_ref()
-            .filter(|v| !matches!(v, UserInteraction::NotDefined))
+            .and_then(|v| v.as_defined())
             .unwrap_or(ui);
         let ms = self
             .modified_scope
             .as_ref()
-            .filter(|v| !matches!(v, Scope::NotDefined))
+            .and_then(|v| v.as_defined())
             .unwrap_or(scope);
         let mc = self
             .modified_confidentiality_impact
             .as_ref()
-            .filter(|v| !matches!(v, Impact::NotDefined))
+            .and_then(|v| v.as_defined())
             .unwrap_or(c);
         let mi = self
             .modified_integrity_impact
             .as_ref()
-            .filter(|v| !matches!(v, Impact::NotDefined))
+            .and_then(|v| v.as_defined())
             .unwrap_or(i);
         let ma = self
             .modified_availability_impact
             .as_ref()
-            .filter(|v| !matches!(v, Impact::NotDefined))
+            .and_then(|v| v.as_defined())
             .unwrap_or(a);
 
         // Security requirements default to 1.0 (Medium/NotDefined)

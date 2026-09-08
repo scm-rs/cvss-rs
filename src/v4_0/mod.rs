@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use strum::{Display, EnumString};
 
 use crate::utils::{parse_metrics::parse_metric, prefix};
-use crate::{ParseError, Severity as UnifiedSeverity, Version, version::VersionV4};
+use crate::{ParseError, Severity as UnifiedSeverity, Version, impl_defined, version::VersionV4};
 
 /// The version every `CvssV4` carries; the FIRST v4.0 schema requires
 /// the key, so deserialization fills it when a document omits it.
@@ -533,6 +533,24 @@ pub enum ProviderUrgency {
     #[strum(serialize = "X")]
     NotDefined,
 }
+
+impl_defined!(
+    ModifiedAttackVector,
+    ModifiedAttackComplexity,
+    ModifiedAttackRequirements,
+    ModifiedPrivilegesRequired,
+    ModifiedUserInteraction,
+    ModifiedImpact,
+    ModifiedSubsequentImpact,
+    ExploitMaturity,
+    Requirement,
+    Safety,
+    Automatable,
+    Recovery,
+    ValueDensity,
+    VulnerabilityResponseEffort,
+    ProviderUrgency,
+);
 
 impl CvssV4 {
     pub fn vector_string(&self) -> &str {

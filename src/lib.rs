@@ -55,6 +55,32 @@ pub mod version;
 // Re-export for API stability
 pub use error::ParseError;
 
+/// Trait for CVSS metric enums that have a `NotDefined` variant.
+///
+/// In CVSS, a metric being absent (`None`) and being explicitly set to
+/// "Not Defined" (`X`) are semantically equivalent for calculations.
+/// This trait provides a uniform way to collapse both states.
+pub trait Defined {
+    fn is_defined(&self) -> bool;
+
+    fn as_defined(&self) -> Option<&Self> {
+        if self.is_defined() { Some(self) } else { None }
+    }
+}
+
+#[macro_export]
+macro_rules! impl_defined {
+    ($($t:ty),+ $(,)?) => {
+        $(
+            impl $crate::Defined for $t {
+                fn is_defined(&self) -> bool {
+                    !matches!(self, Self::NotDefined)
+                }
+            }
+        )+
+    };
+}
+
 /// An enum to hold any version of a CVSS object.
 #[derive(Debug, Deserialize, EnumDiscriminants)]
 #[serde(tag = "version")]
