@@ -80,9 +80,6 @@ pub struct CvssV2 {
     /// The availability requirement metric (environmental).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub availability_requirement: Option<SecurityRequirement>,
-    /// Whether the vector string had the CVSS:2.0/ prefix during parsing.
-    #[serde(skip)]
-    pub has_prefix: bool,
 }
 
 /// Represents the qualitative severity rating of a vulnerability.
@@ -626,7 +623,6 @@ impl FromStr for CvssV2 {
             confidentiality_requirement: None,
             integrity_requirement: None,
             availability_requirement: None,
-            has_prefix: version_opt.is_some(),
         };
 
         // Parse metrics
@@ -683,11 +679,13 @@ impl FromStr for CvssV2 {
 
 impl fmt::Display for CvssV2 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.has_prefix {
+        let has_prefix = self.vector_string.starts_with("CVSS:2.0/");
+
+        if has_prefix {
             write!(f, "CVSS:2.0")?;
         }
 
-        let sep = if self.has_prefix { "/" } else { "" };
+        let sep = if has_prefix { "/" } else { "" };
 
         // Base metrics — first metric needs conditional separator
         if let Some(av) = &self.access_vector {

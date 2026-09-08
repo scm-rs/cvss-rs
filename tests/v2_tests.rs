@@ -76,3 +76,19 @@ fn test_v2_0_display_round_trip(#[case] vector_str: &str) {
         "Round-trip failed for: {vector_str}"
     );
 }
+
+#[test]
+fn test_v2_0_display_round_trip_through_json() {
+    let vector_str = "CVSS:2.0/AV:N/AC:L/Au:N/C:C/I:C/A:C/E:F/RL:OF/RC:C/CDP:H/TD:H/CR:H/IR:H/AR:H";
+    let parsed = CvssV2::from_str(vector_str).expect("Failed to parse vector string");
+
+    let json = serde_json::to_string(&parsed).expect("Failed to serialize CVSS v2");
+    let deserialized: CvssV2 = serde_json::from_str(&json).expect("Failed to deserialize CVSS v2");
+
+    assert_eq!(deserialized, parsed, "Serde round-trip changed CVSS v2");
+    assert_eq!(
+        deserialized.to_string(),
+        vector_str,
+        "Serde round-trip lost the CVSS v2 prefix"
+    );
+}
