@@ -12,6 +12,7 @@ use crate::{ParseError, Severity as UnifiedSeverity, Version, version::VersionV3
 /// Represents a CVSS v3.0 or v3.1 score object.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct CvssV3 {
     /// The CVSS vector string.
     pub vector_string: String,

@@ -24,6 +24,7 @@ fn default_version() -> VersionV4 {
 /// Represents a CVSS v4.0 score object.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct CvssV4 {
     /// The CVSS vector string.
     pub vector_string: String,
