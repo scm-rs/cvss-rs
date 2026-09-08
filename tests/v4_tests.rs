@@ -176,3 +176,14 @@ fn test_v4_0_duplicate_metrics_should_error(#[case] vector: &str, #[case] expect
         "Expected DuplicateMetric error for metric '{expected_metric}', but got: {result:?}"
     );
 }
+
+#[test]
+fn test_v4_0_display_round_trip() {
+    let vector_string = "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:L/SI:L/SA:L/E:A/CR:H/IR:H/AR:H/MAV:L/MAC:H/MAT:P/MPR:L/MUI:P/MVC:L/MVI:L/MVA:L/MSC:L/MSI:L/MSA:L/S:P/AU:Y/R:A/V:D/RE:M/U:Green";
+    let parsed = CvssV4::from_str(vector_string).expect("Failed to parse vector string");
+    let display_str = parsed.to_string();
+    assert_eq!(
+        display_str, vector_string,
+        "Round-trip failed for: {vector_string}"
+    );
+}

@@ -64,3 +64,15 @@ fn test_v2_0_duplicate_metrics_should_error(#[case] vector: &str, #[case] expect
         "Expected DuplicateMetric error for metric '{expected_metric}', but got: {result:?}"
     );
 }
+
+#[rstest]
+#[case("CVSS:2.0/AV:N/AC:L/Au:N/C:C/I:C/A:C/E:F/RL:OF/RC:C/CDP:H/TD:H/CR:H/IR:H/AR:H")]
+#[case("AV:N/AC:L/Au:N/C:C/I:C/A:C/E:F/RL:OF/RC:C/CDP:H/TD:H/CR:H/IR:H/AR:H")]
+fn test_v2_0_display_round_trip(#[case] vector_str: &str) {
+    let parsed = CvssV2::from_str(vector_str).expect("Failed to parse vector string");
+    let display_str = parsed.to_string();
+    assert_eq!(
+        display_str, vector_str,
+        "Round-trip failed for: {vector_str}"
+    );
+}

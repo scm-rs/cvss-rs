@@ -6,7 +6,7 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 use strum::{Display, EnumString};
 
-use crate::utils::{parse_metrics::parse_metric, prefix};
+use crate::utils::{format_vector::write_metric, parse_metrics::parse_metric, prefix};
 use crate::{ParseError, Severity as UnifiedSeverity, Version, impl_defined, version::VersionV2};
 
 /// The version every `CvssV2` carries; the FIRST v2.0 schema requires
@@ -80,6 +80,9 @@ pub struct CvssV2 {
     /// The availability requirement metric (environmental).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub availability_requirement: Option<SecurityRequirement>,
+    /// Whether the vector string had the CVSS:2.0/ prefix during parsing.
+    #[serde(skip)]
+    pub has_prefix: bool,
 }
 
 /// Represents the qualitative severity rating of a vulnerability.
@@ -623,6 +626,7 @@ impl FromStr for CvssV2 {
             confidentiality_requirement: None,
             integrity_requirement: None,
             availability_requirement: None,
+            has_prefix: version_opt.is_some(),
         };
 
         // Parse metrics
@@ -679,26 +683,33 @@ impl FromStr for CvssV2 {
 
 impl fmt::Display for CvssV2 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // CVSS v2 typically doesn't include version prefix, but we'll include it for consistency
-        write!(f, "AV:")?;
+        if self.has_prefix {
+            write!(f, "CVSS:2.0")?;
+        }
+
+        let sep = if self.has_prefix { "/" } else { "" };
+
+        // Base metrics — first metric needs conditional separator
         if let Some(av) = &self.access_vector {
-            write!(f, "{av}")?;
+            write!(f, "{sep}AV:{av}")?;
         }
-        if let Some(ac) = &self.access_complexity {
-            write!(f, "/AC:{ac}")?;
-        }
-        if let Some(au) = &self.authentication {
-            write!(f, "/Au:{au}")?;
-        }
-        if let Some(c) = &self.confidentiality_impact {
-            write!(f, "/C:{c}")?;
-        }
-        if let Some(i) = &self.integrity_impact {
-            write!(f, "/I:{i}")?;
-        }
-        if let Some(a) = &self.availability_impact {
-            write!(f, "/A:{a}")?;
-        }
+        write_metric(f, "AC", self.access_complexity.as_ref())?;
+        write_metric(f, "Au", self.authentication.as_ref())?;
+        write_metric(f, "C", self.confidentiality_impact.as_ref())?;
+        write_metric(f, "I", self.integrity_impact.as_ref())?;
+        write_metric(f, "A", self.availability_impact.as_ref())?;
+
+        // Temporal metrics
+        write_metric(f, "E", self.exploitability.as_ref())?;
+        write_metric(f, "RL", self.remediation_level.as_ref())?;
+        write_metric(f, "RC", self.report_confidence.as_ref())?;
+
+        // Environmental metrics
+        write_metric(f, "CDP", self.collateral_damage_potential.as_ref())?;
+        write_metric(f, "TD", self.target_distribution.as_ref())?;
+        write_metric(f, "CR", self.confidentiality_requirement.as_ref())?;
+        write_metric(f, "IR", self.integrity_requirement.as_ref())?;
+        write_metric(f, "AR", self.availability_requirement.as_ref())?;
 
         Ok(())
     }
