@@ -140,8 +140,7 @@ fn test_v3_1_duplicate_metrics_should_error(#[case] vector: &str, #[case] expect
 
 #[test]
 fn test_v3_1_display_round_trip() {
-    let vector_string =
-        "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/E:F/RL:T/RC:C/CR:H/IR:H/AR:H/MAV:L/MAC:H/MPR:H/MUI:R/MS:C/MC:L/MI:L/MA:L";
+    let vector_string = "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H/E:F/RL:T/RC:C/CR:H/IR:H/AR:H/MAV:L/MAC:H/MPR:H/MUI:R/MS:C/MC:L/MI:L/MA:L";
     let parsed = CvssV3::from_str(vector_string).expect("Failed to parse vector string");
     let display_str = parsed.to_string();
     assert_eq!(
