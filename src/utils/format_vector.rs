@@ -6,7 +6,7 @@ pub fn write_metric<T: fmt::Display>(
     value: Option<&T>,
 ) -> fmt::Result {
     if let Some(val) = value {
-        write!(f, "/{}:{}", key, val)?;
+        write!(f, "/{key}:{val}")?;
     }
     Ok(())
 }
