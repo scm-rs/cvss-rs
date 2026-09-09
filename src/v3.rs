@@ -583,13 +583,28 @@ impl CvssV3 {
     }
 }
 
-/// Rounds up to 1 decimal place as per CVSS v3 specification.
+/// Rounds up to 1 decimal place as required by the CVSS v3 specification.
+///
+/// Applying `ceil` directly to a floating-point value can incorrectly round an
+/// intended exact tenth because earlier calculations may leave a tiny positive
+/// error. The specification avoids that by first normalizing the value to five
+/// decimal places and then performing the round-up decision with integer
+/// arithmetic.
 ///
 /// See <https://www.first.org/cvss/v3.1/specification-document#Appendix-A---Floating-Point-Rounding>.
 fn roundup(value: f64) -> f64 {
+    // Discard insignificant floating-point noise at the precision prescribed
+    // by the specification.
     let int_input = (value * 100000.0).round() as i64;
-    let normalized = int_input as f64 / 100000.0;
-    (normalized * 10.0).ceil() / 10.0
+
+    // Keep the round-up decision in integer arithmetic. Converting back to a
+    // float and calling `ceil` here would reintroduce the precision problem the
+    // normalization step is intended to avoid.
+    if int_input % 10000 == 0 {
+        int_input as f64 / 100000.0
+    } else {
+        (int_input / 10000 + 1) as f64 / 10.0
+    }
 }
 
 impl FromStr for CvssV3 {
@@ -791,5 +806,25 @@ impl fmt::Display for CvssV3 {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod roundup_tests {
+    use super::roundup;
+
+    #[test]
+    fn follows_cvss_v3_integer_rounding_algorithm() {
+        for (input, expected) in [
+            (0.0, 0.0),
+            (4.0, 4.0),
+            (4.02, 4.1),
+            (10.0, 10.0),
+            (1.2000000000000002, 1.2),
+            (4.000001, 4.0),
+            (4.000006, 4.1),
+        ] {
+            assert_eq!(roundup(input), expected, "input: {input}");
+        }
     }
 }
