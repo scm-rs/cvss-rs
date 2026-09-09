@@ -691,23 +691,23 @@ impl fmt::Display for CvssV2 {
         if let Some(av) = &self.access_vector {
             write!(f, "{sep}AV:{av}")?;
         }
-        write_metric(f, "AC", self.access_complexity.as_ref())?;
-        write_metric(f, "Au", self.authentication.as_ref())?;
-        write_metric(f, "C", self.confidentiality_impact.as_ref())?;
-        write_metric(f, "I", self.integrity_impact.as_ref())?;
-        write_metric(f, "A", self.availability_impact.as_ref())?;
+        write_metric(f, "AC", &self.access_complexity)?;
+        write_metric(f, "Au", &self.authentication)?;
+        write_metric(f, "C", &self.confidentiality_impact)?;
+        write_metric(f, "I", &self.integrity_impact)?;
+        write_metric(f, "A", &self.availability_impact)?;
 
         // Temporal metrics
-        write_metric(f, "E", self.exploitability.as_ref())?;
-        write_metric(f, "RL", self.remediation_level.as_ref())?;
-        write_metric(f, "RC", self.report_confidence.as_ref())?;
+        write_metric(f, "E", &self.exploitability)?;
+        write_metric(f, "RL", &self.remediation_level)?;
+        write_metric(f, "RC", &self.report_confidence)?;
 
         // Environmental metrics
-        write_metric(f, "CDP", self.collateral_damage_potential.as_ref())?;
-        write_metric(f, "TD", self.target_distribution.as_ref())?;
-        write_metric(f, "CR", self.confidentiality_requirement.as_ref())?;
-        write_metric(f, "IR", self.integrity_requirement.as_ref())?;
-        write_metric(f, "AR", self.availability_requirement.as_ref())?;
+        write_metric(f, "CDP", &self.collateral_damage_potential)?;
+        write_metric(f, "TD", &self.target_distribution)?;
+        write_metric(f, "CR", &self.confidentiality_requirement)?;
+        write_metric(f, "IR", &self.integrity_requirement)?;
+        write_metric(f, "AR", &self.availability_requirement)?;
 
         Ok(())
     }

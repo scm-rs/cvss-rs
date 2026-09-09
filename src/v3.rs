@@ -734,32 +734,32 @@ impl fmt::Display for CvssV3 {
         write!(f, "CVSS:{version}")?;
 
         // Base metrics
-        write_metric(f, "AV", self.attack_vector.as_ref())?;
-        write_metric(f, "AC", self.attack_complexity.as_ref())?;
-        write_metric(f, "PR", self.privileges_required.as_ref())?;
-        write_metric(f, "UI", self.user_interaction.as_ref())?;
-        write_metric(f, "S", self.scope.as_ref())?;
-        write_metric(f, "C", self.confidentiality_impact.as_ref())?;
-        write_metric(f, "I", self.integrity_impact.as_ref())?;
-        write_metric(f, "A", self.availability_impact.as_ref())?;
+        write_metric(f, "AV", &self.attack_vector)?;
+        write_metric(f, "AC", &self.attack_complexity)?;
+        write_metric(f, "PR", &self.privileges_required)?;
+        write_metric(f, "UI", &self.user_interaction)?;
+        write_metric(f, "S", &self.scope)?;
+        write_metric(f, "C", &self.confidentiality_impact)?;
+        write_metric(f, "I", &self.integrity_impact)?;
+        write_metric(f, "A", &self.availability_impact)?;
 
         // Temporal metrics
-        write_metric(f, "E", self.exploit_code_maturity.as_ref())?;
-        write_metric(f, "RL", self.remediation_level.as_ref())?;
-        write_metric(f, "RC", self.report_confidence.as_ref())?;
+        write_metric(f, "E", &self.exploit_code_maturity)?;
+        write_metric(f, "RL", &self.remediation_level)?;
+        write_metric(f, "RC", &self.report_confidence)?;
 
         // Environmental metrics
-        write_metric(f, "CR", self.confidentiality_requirement.as_ref())?;
-        write_metric(f, "IR", self.integrity_requirement.as_ref())?;
-        write_metric(f, "AR", self.availability_requirement.as_ref())?;
-        write_metric(f, "MAV", self.modified_attack_vector.as_ref())?;
-        write_metric(f, "MAC", self.modified_attack_complexity.as_ref())?;
-        write_metric(f, "MPR", self.modified_privileges_required.as_ref())?;
-        write_metric(f, "MUI", self.modified_user_interaction.as_ref())?;
-        write_metric(f, "MS", self.modified_scope.as_ref())?;
-        write_metric(f, "MC", self.modified_confidentiality_impact.as_ref())?;
-        write_metric(f, "MI", self.modified_integrity_impact.as_ref())?;
-        write_metric(f, "MA", self.modified_availability_impact.as_ref())?;
+        write_metric(f, "CR", &self.confidentiality_requirement)?;
+        write_metric(f, "IR", &self.integrity_requirement)?;
+        write_metric(f, "AR", &self.availability_requirement)?;
+        write_metric(f, "MAV", &self.modified_attack_vector)?;
+        write_metric(f, "MAC", &self.modified_attack_complexity)?;
+        write_metric(f, "MPR", &self.modified_privileges_required)?;
+        write_metric(f, "MUI", &self.modified_user_interaction)?;
+        write_metric(f, "MS", &self.modified_scope)?;
+        write_metric(f, "MC", &self.modified_confidentiality_impact)?;
+        write_metric(f, "MI", &self.modified_integrity_impact)?;
+        write_metric(f, "MA", &self.modified_availability_impact)?;
 
         Ok(())
     }

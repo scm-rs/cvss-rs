@@ -749,44 +749,44 @@ impl fmt::Display for CvssV4 {
         write!(f, "CVSS:4.0")?;
 
         // Base metrics
-        write_metric(f, "AV", self.attack_vector.as_ref())?;
-        write_metric(f, "AC", self.attack_complexity.as_ref())?;
-        write_metric(f, "AT", self.attack_requirements.as_ref())?;
-        write_metric(f, "PR", self.privileges_required.as_ref())?;
-        write_metric(f, "UI", self.user_interaction.as_ref())?;
-        write_metric(f, "VC", self.vuln_confidentiality_impact.as_ref())?;
-        write_metric(f, "VI", self.vuln_integrity_impact.as_ref())?;
-        write_metric(f, "VA", self.vuln_availability_impact.as_ref())?;
-        write_metric(f, "SC", self.sub_confidentiality_impact.as_ref())?;
-        write_metric(f, "SI", self.sub_integrity_impact.as_ref())?;
-        write_metric(f, "SA", self.sub_availability_impact.as_ref())?;
+        write_metric(f, "AV", &self.attack_vector)?;
+        write_metric(f, "AC", &self.attack_complexity)?;
+        write_metric(f, "AT", &self.attack_requirements)?;
+        write_metric(f, "PR", &self.privileges_required)?;
+        write_metric(f, "UI", &self.user_interaction)?;
+        write_metric(f, "VC", &self.vuln_confidentiality_impact)?;
+        write_metric(f, "VI", &self.vuln_integrity_impact)?;
+        write_metric(f, "VA", &self.vuln_availability_impact)?;
+        write_metric(f, "SC", &self.sub_confidentiality_impact)?;
+        write_metric(f, "SI", &self.sub_integrity_impact)?;
+        write_metric(f, "SA", &self.sub_availability_impact)?;
 
         // Threat metrics
-        write_metric(f, "E", self.exploit_maturity.as_ref())?;
+        write_metric(f, "E", &self.exploit_maturity)?;
 
         // Environmental metrics
-        write_metric(f, "CR", self.confidentiality_requirement.as_ref())?;
-        write_metric(f, "IR", self.integrity_requirement.as_ref())?;
-        write_metric(f, "AR", self.availability_requirement.as_ref())?;
-        write_metric(f, "MAV", self.modified_attack_vector.as_ref())?;
-        write_metric(f, "MAC", self.modified_attack_complexity.as_ref())?;
-        write_metric(f, "MAT", self.modified_attack_requirements.as_ref())?;
-        write_metric(f, "MPR", self.modified_privileges_required.as_ref())?;
-        write_metric(f, "MUI", self.modified_user_interaction.as_ref())?;
-        write_metric(f, "MVC", self.modified_vuln_confidentiality_impact.as_ref())?;
-        write_metric(f, "MVI", self.modified_vuln_integrity_impact.as_ref())?;
-        write_metric(f, "MVA", self.modified_vuln_availability_impact.as_ref())?;
-        write_metric(f, "MSC", self.modified_sub_confidentiality_impact.as_ref())?;
-        write_metric(f, "MSI", self.modified_sub_integrity_impact.as_ref())?;
-        write_metric(f, "MSA", self.modified_sub_availability_impact.as_ref())?;
+        write_metric(f, "CR", &self.confidentiality_requirement)?;
+        write_metric(f, "IR", &self.integrity_requirement)?;
+        write_metric(f, "AR", &self.availability_requirement)?;
+        write_metric(f, "MAV", &self.modified_attack_vector)?;
+        write_metric(f, "MAC", &self.modified_attack_complexity)?;
+        write_metric(f, "MAT", &self.modified_attack_requirements)?;
+        write_metric(f, "MPR", &self.modified_privileges_required)?;
+        write_metric(f, "MUI", &self.modified_user_interaction)?;
+        write_metric(f, "MVC", &self.modified_vuln_confidentiality_impact)?;
+        write_metric(f, "MVI", &self.modified_vuln_integrity_impact)?;
+        write_metric(f, "MVA", &self.modified_vuln_availability_impact)?;
+        write_metric(f, "MSC", &self.modified_sub_confidentiality_impact)?;
+        write_metric(f, "MSI", &self.modified_sub_integrity_impact)?;
+        write_metric(f, "MSA", &self.modified_sub_availability_impact)?;
 
         // Supplemental metrics
-        write_metric(f, "S", self.safety.as_ref())?;
-        write_metric(f, "AU", self.automatable.as_ref())?;
-        write_metric(f, "R", self.recovery.as_ref())?;
-        write_metric(f, "V", self.value_density.as_ref())?;
-        write_metric(f, "RE", self.vulnerability_response_effort.as_ref())?;
-        write_metric(f, "U", self.provider_urgency.as_ref())?;
+        write_metric(f, "S", &self.safety)?;
+        write_metric(f, "AU", &self.automatable)?;
+        write_metric(f, "R", &self.recovery)?;
+        write_metric(f, "V", &self.value_density)?;
+        write_metric(f, "RE", &self.vulnerability_response_effort)?;
+        write_metric(f, "U", &self.provider_urgency)?;
 
         Ok(())
     }
