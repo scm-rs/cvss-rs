@@ -58,8 +58,9 @@ pub use error::ParseError;
 /// Trait for CVSS metric enums that have a `NotDefined` variant.
 ///
 /// In CVSS, a metric being absent (`None`) and being explicitly set to
-/// "Not Defined" (`X`) are semantically equivalent for calculations.
-/// This trait provides a uniform way to collapse both states.
+/// "Not Defined" (`ND` in v2, `X` in v3/v4) are semantically equivalent
+/// for calculations. This trait provides a uniform way to view both states
+/// as undefined without changing their parsed or serialized representation.
 pub trait Defined {
     fn is_defined(&self) -> bool;
 

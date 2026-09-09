@@ -1,6 +1,7 @@
 //! CVSS v4.0 score and nomenclature types.
 
 use super::*;
+use crate::Defined;
 use std::fmt;
 
 /// CVSS v4.0 Nomenclature indicates the type of metrics used to calculate the score.
@@ -32,25 +33,32 @@ impl fmt::Display for Nomenclature {
     }
 }
 
+fn has_defined_metric<T: Defined>(metric: &Option<T>) -> bool {
+    metric
+        .as_ref()
+        .and_then(|value| value.as_defined())
+        .is_some()
+}
+
 impl From<&CvssV4> for Nomenclature {
     /// Detects the appropriate nomenclature based on which metrics are present in the vector.
     fn from(cvss: &CvssV4) -> Self {
-        let has_threat = cvss.exploit_maturity.is_some();
+        let has_threat = has_defined_metric(&cvss.exploit_maturity);
 
-        let has_environmental = cvss.confidentiality_requirement.is_some()
-            || cvss.integrity_requirement.is_some()
-            || cvss.availability_requirement.is_some()
-            || cvss.modified_attack_vector.is_some()
-            || cvss.modified_attack_complexity.is_some()
-            || cvss.modified_attack_requirements.is_some()
-            || cvss.modified_privileges_required.is_some()
-            || cvss.modified_user_interaction.is_some()
-            || cvss.modified_vuln_confidentiality_impact.is_some()
-            || cvss.modified_vuln_integrity_impact.is_some()
-            || cvss.modified_vuln_availability_impact.is_some()
-            || cvss.modified_sub_confidentiality_impact.is_some()
-            || cvss.modified_sub_integrity_impact.is_some()
-            || cvss.modified_sub_availability_impact.is_some();
+        let has_environmental = has_defined_metric(&cvss.confidentiality_requirement)
+            || has_defined_metric(&cvss.integrity_requirement)
+            || has_defined_metric(&cvss.availability_requirement)
+            || has_defined_metric(&cvss.modified_attack_vector)
+            || has_defined_metric(&cvss.modified_attack_complexity)
+            || has_defined_metric(&cvss.modified_attack_requirements)
+            || has_defined_metric(&cvss.modified_privileges_required)
+            || has_defined_metric(&cvss.modified_user_interaction)
+            || has_defined_metric(&cvss.modified_vuln_confidentiality_impact)
+            || has_defined_metric(&cvss.modified_vuln_integrity_impact)
+            || has_defined_metric(&cvss.modified_vuln_availability_impact)
+            || has_defined_metric(&cvss.modified_sub_confidentiality_impact)
+            || has_defined_metric(&cvss.modified_sub_integrity_impact)
+            || has_defined_metric(&cvss.modified_sub_availability_impact);
 
         match (has_threat, has_environmental) {
             (true, true) => Nomenclature::CvssBTE,

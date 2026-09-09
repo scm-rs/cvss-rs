@@ -1,6 +1,28 @@
 use cvss_rs::Defined;
+use cvss_rs::v2_0;
 use cvss_rs::v3;
 use cvss_rs::v4_0;
+
+#[test]
+fn test_v2_defined_trait() {
+    assert!(v2_0::Exploitability::Functional.is_defined());
+    assert!(!v2_0::Exploitability::NotDefined.is_defined());
+
+    assert_eq!(
+        v2_0::Exploitability::Functional.as_defined(),
+        Some(&v2_0::Exploitability::Functional)
+    );
+    assert_eq!(v2_0::Exploitability::NotDefined.as_defined(), None);
+}
+
+#[test]
+fn test_v2_all_enums_have_defined() {
+    assert!(!v2_0::RemediationLevel::NotDefined.is_defined());
+    assert!(!v2_0::ReportConfidence::NotDefined.is_defined());
+    assert!(!v2_0::CollateralDamagePotential::NotDefined.is_defined());
+    assert!(!v2_0::TargetDistribution::NotDefined.is_defined());
+    assert!(!v2_0::SecurityRequirement::NotDefined.is_defined());
+}
 
 #[test]
 fn test_v3_defined_trait() {

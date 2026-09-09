@@ -1,5 +1,8 @@
 use cvss_rs as cvss;
-use cvss_rs::{ParseError, v4_0::CvssV4};
+use cvss_rs::{
+    ParseError,
+    v4_0::{CvssV4, Nomenclature},
+};
 use rstest::rstest;
 use std::str::FromStr;
 
@@ -32,6 +35,25 @@ fn test_v4_0_exploit_maturity_notdefined() {
 
     let score2 = cvss2.calculated_base_score().unwrap();
     assert_eq!(score2, 5.1, "E:X should be treated as E:A");
+}
+
+#[rstest]
+#[case("", Nomenclature::CvssB)]
+#[case("/E:X", Nomenclature::CvssB)]
+#[case("/CR:X", Nomenclature::CvssB)]
+#[case("/E:X/CR:X", Nomenclature::CvssB)]
+fn test_v4_0_not_defined_metrics_do_not_change_nomenclature(
+    #[case] optional_metrics: &str,
+    #[case] expected: Nomenclature,
+) {
+    let base = "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:N/SA:N";
+    let cvss = CvssV4::from_str(&format!("{base}{optional_metrics}"))
+        .expect("Failed to parse CVSS v4 vector");
+
+    let (_, nomenclature) = cvss
+        .calculated_score()
+        .expect("Failed to calculate CVSS v4 score");
+    assert_eq!(nomenclature, expected);
 }
 
 #[test]

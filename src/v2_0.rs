@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use strum::{Display, EnumString};
 
 use crate::utils::{parse_metrics::parse_metric, prefix};
-use crate::{ParseError, Severity as UnifiedSeverity, Version, version::VersionV2};
+use crate::{ParseError, Severity as UnifiedSeverity, Version, impl_defined, version::VersionV2};
 
 /// The version every `CvssV2` carries; the FIRST v2.0 schema requires
 /// the key, so deserialization fills it when a document omits it.
@@ -372,6 +372,15 @@ impl SecurityRequirement {
         }
     }
 }
+
+impl_defined!(
+    Exploitability,
+    RemediationLevel,
+    ReportConfidence,
+    CollateralDamagePotential,
+    TargetDistribution,
+    SecurityRequirement,
+);
 
 fn round_to_first_decimal(value: f64) -> f64 {
     (value * 10.0).round() / 10.0
