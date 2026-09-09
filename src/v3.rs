@@ -404,9 +404,13 @@ impl CvssV3 {
     }
 
     /// Calculates the base score from the base metrics.
-    /// Returns None if required base metrics are missing.
+    ///
+    /// There is no difference in the base score calculation between CVSS v3.0 and v3.1.
+    ///
+    /// See the [CVSS v3.1 specification](https://www.first.org/cvss/v3.1/specification-document#7-1-Base-Metrics-Equations).
+    ///
+    /// Returns `None` if any required base metric is missing.
     pub fn calculated_base_score(&self) -> Option<f64> {
-        // All base metrics are required
         let av = self.attack_vector.as_ref()?;
         let ac = self.attack_complexity.as_ref()?;
         let pr = self.privileges_required.as_ref()?;
@@ -418,62 +422,59 @@ impl CvssV3 {
 
         let scope_changed = scope.is_changed();
 
-        // Calculate exploitability sub-score
-        let exploitability = 8.22 * av.score() * ac.score() * pr.score(scope_changed) * ui.score();
+        // ISS (Impact Sub Score)
+        let iss = 1.0 - ((1.0 - c.score()) * (1.0 - i.score()) * (1.0 - a.score()));
 
-        // Calculate impact sub-score
-        let impact_sub = 1.0 - ((1.0 - c.score()) * (1.0 - i.score()) * (1.0 - a.score()));
-
-        // Calculate ISS (Impact Sub Score)
-        // Base score formula is the same for v3.0 and v3.1
-        let iss = if scope_changed {
-            7.52 * (impact_sub - 0.029) - 3.25 * (impact_sub - 0.02).powf(15.0)
+        let impact = if scope_changed {
+            7.52 * (iss - 0.029) - 3.25 * (iss - 0.02).powf(15.0)
         } else {
-            6.42 * impact_sub
+            6.42 * iss
         };
 
-        // Calculate base score
-        let score = if iss <= 0.0 {
+        let exploitability = 8.22 * av.score() * ac.score() * pr.score(scope_changed) * ui.score();
+
+        let score = if impact <= 0.0 {
             0.0
         } else if scope_changed {
-            Self::roundup(f64::min(1.08 * (exploitability + iss), 10.0))
+            roundup(f64::min(1.08 * (impact + exploitability), 10.0))
         } else {
-            Self::roundup(f64::min(exploitability + iss, 10.0))
+            roundup(f64::min(impact + exploitability, 10.0))
         };
 
         Some(score)
     }
 
     /// Calculates the temporal score from base and temporal metrics.
-    /// Returns None if required metrics are missing.
+    ///
+    /// Temporal metrics default to 1.0 (NotDefined) when absent.
+    /// There is no difference in the temporal score calculation between CVSS v3.0 and v3.1.
+    ///
+    /// See the [CVSS v3.1 specification](https://www.first.org/cvss/v3.1/specification-document#7-2-Temporal-Metrics-Equations).
+    ///
+    /// Returns `None` if any required base metric is missing.
     pub fn calculated_temporal_score(&self) -> Option<f64> {
         let base_score = self.calculated_base_score()?;
 
-        // Temporal metrics default to 1.0 (NotDefined) if not present
         let e = self
             .exploit_code_maturity
             .as_ref()
-            .map(|m| m.score())
-            .unwrap_or(1.0);
-        let rl = self
-            .remediation_level
-            .as_ref()
-            .map(|m| m.score())
-            .unwrap_or(1.0);
-        let rc = self
-            .report_confidence
-            .as_ref()
-            .map(|m| m.score())
-            .unwrap_or(1.0);
+            .map_or(1.0, |m| m.score());
+        let rl = self.remediation_level.as_ref().map_or(1.0, |m| m.score());
+        let rc = self.report_confidence.as_ref().map_or(1.0, |m| m.score());
 
-        let score = Self::roundup(base_score * e * rl * rc);
-        Some(score)
+        Some(roundup(base_score * e * rl * rc))
     }
 
     /// Calculates the environmental score from base, temporal, and environmental metrics.
-    /// Returns None if required base metrics are missing.
+    ///
+    /// Modified base metrics default to the corresponding base metric when absent or NotDefined.
+    /// The modified impact formula differs between CVSS v3.0 and v3.1.
+    ///
+    /// See the [CVSS v3.1 specification](https://www.first.org/cvss/v3.1/specification-document#7-3-Environmental-Metrics-Equations)
+    /// and the [CVSS v3.0 specification](https://www.first.org/cvss/v3.0/specification-document#8-3-Environmental).
+    ///
+    /// Returns `None` if any required base metric is missing.
     pub fn calculated_environmental_score(&self) -> Option<f64> {
-        // Get base metrics (required)
         let av = self.attack_vector.as_ref()?;
         let ac = self.attack_complexity.as_ref()?;
         let pr = self.privileges_required.as_ref()?;
@@ -525,96 +526,70 @@ impl CvssV3 {
             .and_then(|v| v.as_defined())
             .unwrap_or(a);
 
-        // Security requirements default to 1.0 (Medium/NotDefined)
         let cr = self
             .confidentiality_requirement
             .as_ref()
-            .map(|r| r.score())
-            .unwrap_or(1.0);
+            .map_or(1.0, |m| m.score());
         let ir = self
             .integrity_requirement
             .as_ref()
-            .map(|r| r.score())
-            .unwrap_or(1.0);
+            .map_or(1.0, |m| m.score());
         let ar = self
             .availability_requirement
             .as_ref()
-            .map(|r| r.score())
-            .unwrap_or(1.0);
+            .map_or(1.0, |m| m.score());
 
         let scope_changed = ms.is_changed();
 
-        // Calculate modified exploitability
         let m_exploitability =
             8.22 * mav.score() * mac.score() * mpr.score(scope_changed) * mui.score();
 
-        // Calculate modified impact
-        let m_impact_sub = f64::min(
+        // Modified ISS (MISS)
+        let m_iss = f64::min(
             1.0 - ((1.0 - cr * mc.score()) * (1.0 - ir * mi.score()) * (1.0 - ar * ma.score())),
             0.915,
         );
 
-        // Calculate modified ISS
-        // CVSS v3.1 uses a different formula than v3.0
-        let m_iss = if scope_changed {
+        // Modified impact — v3.1 uses a different formula than v3.0
+        let m_impact = if scope_changed {
             match self.version {
                 Some(VersionV3::V3_1) => {
-                    // v3.1: 7.52 × (MISS - 0.029) - 3.25 × (MISS × 0.9731 - 0.02)^13
-                    7.52 * (m_impact_sub - 0.029) - 3.25 * (m_impact_sub * 0.9731 - 0.02).powf(13.0)
+                    7.52 * (m_iss - 0.029) - 3.25 * (m_iss * 0.9731 - 0.02).powf(13.0)
                 }
-                _ => {
-                    // v3.0: 7.52 × (MISS - 0.029) - 3.25 × (MISS - 0.02)^15
-                    7.52 * (m_impact_sub - 0.029) - 3.25 * (m_impact_sub - 0.02).powf(15.0)
-                }
+                _ => 7.52 * (m_iss - 0.029) - 3.25 * (m_iss - 0.02).powf(15.0),
             }
         } else {
-            6.42 * m_impact_sub
+            6.42 * m_iss
         };
 
-        // Calculate environmental score
-        let score = if m_iss <= 0.0 {
+        let score = if m_impact <= 0.0 {
             0.0
         } else {
-            // Temporal metrics for environmental calculation
             let e = self
                 .exploit_code_maturity
                 .as_ref()
-                .map(|m| m.score())
-                .unwrap_or(1.0);
-            let rl = self
-                .remediation_level
-                .as_ref()
-                .map(|m| m.score())
-                .unwrap_or(1.0);
-            let rc = self
-                .report_confidence
-                .as_ref()
-                .map(|m| m.score())
-                .unwrap_or(1.0);
+                .map_or(1.0, |m| m.score());
+            let rl = self.remediation_level.as_ref().map_or(1.0, |m| m.score());
+            let rc = self.report_confidence.as_ref().map_or(1.0, |m| m.score());
 
             if scope_changed {
-                Self::roundup(
-                    Self::roundup(f64::min(1.08 * (m_exploitability + m_iss), 10.0)) * e * rl * rc,
-                )
+                roundup(roundup(f64::min(1.08 * (m_exploitability + m_impact), 10.0)) * e * rl * rc)
             } else {
-                Self::roundup(Self::roundup(f64::min(m_exploitability + m_iss, 10.0)) * e * rl * rc)
+                roundup(roundup(f64::min(m_exploitability + m_impact, 10.0)) * e * rl * rc)
             }
         };
 
         Some(score)
     }
+}
 
-    /// Rounds up to 1 decimal place as per CVSS v3 specification.
-    ///
-    /// Per the CVSS v3 spec, to avoid floating point precision issues,
-    /// the input is first multiplied by 100,000 and rounded to the nearest integer.
-    /// This ensures consistent rounding across different implementations.
-    fn roundup(value: f64) -> f64 {
-        // Handle floating point precision by normalizing to integer first
-        let int_input = (value * 100000.0).round() as i64;
-        let normalized = int_input as f64 / 100000.0;
-        (normalized * 10.0).ceil() / 10.0
-    }
+/// Rounds up to 1 decimal place as per CVSS v3 specification.
+///
+/// See <https://www.first.org/cvss/v3.1/specification-document#Appendix-A---Floating-Point-Rounding>.
+fn roundup(value: f64) -> f64 {
+    let int_input = (value * 100000.0).round() as i64;
+    let normalized = int_input as f64 / 100000.0;
+    (normalized * 10.0).ceil() / 10.0
 }
 
 impl FromStr for CvssV3 {
