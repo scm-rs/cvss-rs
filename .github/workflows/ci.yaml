@@ -26,8 +26,8 @@ jobs:
     if: always()
     steps:
       - name: Success
-        if: ${{ !(contains(needs.*.result, 'failure')) }}
+        if: ${{ needs.common.result == 'success' }}
         run: exit 0
       - name: Failure
-        if: ${{ contains(needs.*.result, 'failure') }}
+        if: ${{ needs.common.result != 'success' }}
         run: exit 1
