@@ -1,0 +1,19 @@
+{
+  "platform": "local",
+  "dryRun": "lookup",
+  "autodiscover": false,
+  "onboarding": false,
+  "useCloudMetadataServices": false,
+  "detectHostRulesFromEnv": false,
+  "detectGlobalManagerConfig": false,
+  "exposeAllEnv": false,
+  "allowedEnv": [],
+  "allowScripts": false,
+  "allowPlugins": false,
+  "allowedCommands": [],
+  "allowShellExecutorForPostUpgradeCommands": false,
+  "allowCustomCrateGitRegistries": false,
+  "binarySource": "global",
+  "persistRepoData": true,
+  "repositoryCache": "disabled"
+}

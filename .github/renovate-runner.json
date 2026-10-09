@@ -1,0 +1,29 @@
+{
+  "platform": "github",
+  "autodiscover": false,
+  "forkProcessing": "enabled",
+  "onboarding": false,
+  "requireConfig": "required",
+  "username": "github-actions[bot]",
+  "gitAuthor": "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>",
+  "useCloudMetadataServices": false,
+  "detectHostRulesFromEnv": false,
+  "detectGlobalManagerConfig": false,
+  "exposeAllEnv": false,
+  "allowedEnv": [],
+  "allowScripts": false,
+  "allowPlugins": false,
+  "allowedCommands": [],
+  "allowShellExecutorForPostUpgradeCommands": false,
+  "allowCustomCrateGitRegistries": false,
+  "binarySource": "global",
+  "persistRepoData": false,
+  "force": {
+    "branchPrefix": "renovate-ci/",
+    "baseBranchPatterns": ["$default"],
+    "automerge": false,
+    "platformAutomerge": false,
+    "platformCommit": "enabled",
+    "lockFileMaintenance": { "enabled": false }
+  }
+}

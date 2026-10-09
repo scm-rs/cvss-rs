@@ -1,0 +1,52 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "enabledManagers": ["cargo"],
+  "baseBranchPatterns": ["$default"],
+  "ignorePaths": ["web/**"],
+  "automerge": false,
+  "platformAutomerge": false,
+  "rangeStrategy": "auto",
+  "lockFileMaintenance": { "enabled": false },
+  "dependencyDashboard": true,
+  "prConcurrentLimit": 2,
+  "prHourlyLimit": 1,
+  "minimumReleaseAge": "3 days",
+  "prBodyNotes": [
+    "Preserve MSRV, features and the library lockfile policy. Require current-head CI, human review and the merge queue; do not use bypass permissions.",
+    "Web manifest updates are deferred; this does not isolate Cargo workspace resolution or existing CI."
+  ],
+  "vulnerabilityAlerts": {
+    "automerge": false,
+    "platformAutomerge": false
+  },
+  "cargo": {
+    "automerge": false,
+    "platformAutomerge": false,
+    "rangeStrategy": "auto",
+    "packageRules": [
+      {
+        "description": "Disable nested Cargo manifests without matching root lockfile references.",
+        "matchFileNames": ["**/Cargo.toml", "!Cargo.toml"],
+        "enabled": false,
+        "automerge": false,
+        "platformAutomerge": false
+      },
+      {
+        "description": "Review root-manifest updates individually while preserving inherited dependency holds.",
+        "matchFileNames": ["Cargo.toml"],
+        "automerge": false,
+        "platformAutomerge": false,
+        "rangeStrategy": "auto",
+        "groupName": null
+      },
+      {
+        "matchFileNames": ["Cargo.toml"],
+        "matchCurrentVersion": "<1.0.0",
+        "matchUpdateTypes": ["minor"],
+        "prBodyNotes": [
+          "Pre-1.0 minor update: potentially breaking. Review compatibility and actual MSRV results before ordinary reviewed/queued merge."
+        ]
+      }
+    ]
+  }
+}
