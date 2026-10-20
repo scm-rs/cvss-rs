@@ -17,5 +17,6 @@ jobs:
     needs:
       - ci
     uses: scm-rs/shared-workflows/.github/workflows/release.yaml@main
-    secrets:
-      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+    # no CARGO_REGISTRY_TOKEN: publishing to crates.io uses trusted publishing
+    # (OIDC) via the "release" environment. Passing the token would take
+    # precedence in the shared workflow and bypass it.
