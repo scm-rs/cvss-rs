@@ -12,6 +12,9 @@ on:
 
 permissions: {}
 
+env:
+  RENOVATE_IMAGE: ghcr.io/renovatebot/renovate:44.142.1-full@sha256:11fad8714c1c1a0283df4dea350299d634bd55de4aef7b752f762ed78c0ae417
+
 concurrency:
   group: renovate-ci-${{ github.event_name == 'pull_request' && github.event.pull_request.number || 'production' }}
   cancel-in-progress: false
@@ -41,7 +44,7 @@ jobs:
         with:
           configurationFile: .github/renovate-runner.json
           token: ${{ github.token }} # GITHUB_TOKEN; no PAT/App credential
-          renovate-image: ghcr.io/renovatebot/renovate:44.142.1-full@sha256:11fad8714c1c1a0283df4dea350299d634bd55de4aef7b752f762ed78c0ae417
+          renovate-image: ${{ env.RENOVATE_IMAGE }}
           mount-docker-socket: 'false'
           docker-volumes: ''
           env-regex: '^(RENOVATE_REPOSITORIES|RENOVATE_ENDPOINT|RENOVATE_PRINT_CONFIG|LOG_LEVEL)$'
@@ -68,8 +71,6 @@ jobs:
           persist-credentials: false
       - name: Validate repository and runner configuration
         shell: bash
-        env:
-          RENOVATE_IMAGE: ghcr.io/renovatebot/renovate:44.142.1-full@sha256:11fad8714c1c1a0283df4dea350299d634bd55de4aef7b752f762ed78c0ae417
         run: |
           set -euo pipefail
           test -f renovate.json
