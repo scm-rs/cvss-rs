@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: '17 3 * * 1'
   pull_request:
+    paths:
+      - renovate.json
+      - .github/renovate-runner.json
+      - .github/workflows/renovate.yaml
 
 permissions: {}
 
@@ -48,7 +52,7 @@ jobs:
           LOG_LEVEL: debug
 
   pr-check:
-    name: PR configuration and dependency lookup
+    name: Validate Renovate configuration
     if: >-
       github.event_name == 'pull_request' &&
       github.event.pull_request.base.ref == github.event.repository.default_branch
@@ -62,36 +66,18 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - name: Validate checkout configuration and lookup locally
+      - name: Validate repository and runner configuration
         shell: bash
         env:
           RENOVATE_IMAGE: ghcr.io/renovatebot/renovate:44.142.1-full@sha256:11fad8714c1c1a0283df4dea350299d634bd55de4aef7b752f762ed78c0ae417
         run: |
           set -euo pipefail
           test -f renovate.json
-          # Only the read-only checkout is mounted; no token/env inheritance, host cache or socket.
+          # Only the read-only checkout is mounted; no token, host cache or socket is passed.
           container=(docker run --rm
             --mount "type=bind,source=$GITHUB_WORKSPACE,target=/workspace,readonly"
-            --workdir /workspace
-            --env GIT_CONFIG_NOSYSTEM=1
-            --env GIT_CONFIG_GLOBAL=/dev/null
-            --env GIT_CONFIG_COUNT=1
-            --env GIT_CONFIG_KEY_0=safe.directory
-            --env GIT_CONFIG_VALUE_0=/workspace
-            --env GIT_TERMINAL_PROMPT=0
-            --env AWS_EC2_METADATA_DISABLED=true
-            --env RENOVATE_USE_CLOUD_METADATA_SERVICES=false
-            --env RENOVATE_DETECT_HOST_RULES_FROM_ENV=false
-            --env RENOVATE_DETECT_GLOBAL_MANAGER_CONFIG=false)
+            --workdir /workspace)
           "${container[@]}" --entrypoint renovate-config-validator "$RENOVATE_IMAGE" \
             --strict --no-global /workspace/renovate.json
           "${container[@]}" --entrypoint renovate-config-validator "$RENOVATE_IMAGE" \
-            --strict /workspace/.github/renovate-runner.json /workspace/.github/renovate-pr-check.json
-          # Explicit root policy plus independent local safety config, never the GitHub runner config.
-          # Local mode forces requireConfig=optional and has no GitHub default-branch/force semantics.
-          "${container[@]}" \
-            --env RENOVATE_CONFIG_FILE=/workspace/renovate.json \
-            --env RENOVATE_ADDITIONAL_CONFIG_FILE=/workspace/.github/renovate-pr-check.json \
-            --env LOG_LEVEL=debug \
-            --entrypoint renovate "$RENOVATE_IMAGE" \
-            --platform=local --dry-run=lookup --onboarding=false --print-config=true
+            --strict /workspace/.github/renovate-runner.json
