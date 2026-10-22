@@ -32,7 +32,7 @@ serde_json = "1.0"
 
 [dev-dependencies]
 anyhow = "1.0"
-rstest = "0.26"
+rstest = "0.28"
 walkdir = "2"
 indicatif = { version = "0.18", features = ["rayon"] }
 rayon = "1.5"
